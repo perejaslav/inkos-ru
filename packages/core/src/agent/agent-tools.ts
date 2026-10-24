@@ -2537,7 +2537,7 @@ export function createPlayEditTool(
       const runId = "main";
       const world = await store.loadWorld(worldId);
       if (!world) {
-        throw new Error(language === "en"
+        throw new Error(language === "ru" ? "Интерактивный мир ещё не создан. Сначала вызовите play_start." : language === "en"
           ? "There is no interactive world to edit yet. Start one with play_start first."
           : "还没有可编辑的互动世界。先用 play_start 开一局。");
       }

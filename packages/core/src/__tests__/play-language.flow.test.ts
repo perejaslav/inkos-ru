@@ -64,3 +64,15 @@ it('uses Russian labels and feedback when editing a Russian Play world',async()=
   expect(JSON.stringify(result)).toContain('Настройки интерактивного мира обновлены.');
  } finally { await rm(root,{recursive:true,force:true}); }
 });
+it('reports a missing Play world in the requested language',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'inkos-play-missing-'));
+ try {
+  for (const [language,expected] of [
+   ['ru','Интерактивный мир ещё не создан'],
+   ['en','There is no interactive world to edit yet'],
+   ['zh','还没有可编辑的互动世界'],
+  ] as const) {
+   await expect(createPlayEditTool(root,'missing',language).execute('edit',{})).rejects.toThrow(expected);
+  }
+ } finally { await rm(root,{recursive:true,force:true}); }
+});
