@@ -16,3 +16,14 @@ export function parseStudioBookLanguageUpdate(value: unknown): ContentLanguage |
   if (typeof value !== "string") throw new Error("Expected language to be a string");
   return normalizeContentLanguage(value);
 }
+
+/** Resolve style-analysis language without trusting untyped HTTP JSON. */
+export function resolveStudioStyleLanguage(value: unknown, projectLanguage: unknown): ContentLanguage {
+  if (value !== undefined) {
+    if (typeof value !== "string") throw new Error("Expected language to be a string");
+    return normalizeContentLanguage(value);
+  }
+  return typeof projectLanguage === "string"
+    ? normalizeContentLanguage(projectLanguage)
+    : "zh";
+}

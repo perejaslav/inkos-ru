@@ -1,4 +1,4 @@
-import { parseStudioProjectLanguage, parseStudioBookLanguageUpdate } from "./project-language.js";
+import { parseStudioProjectLanguage, parseStudioBookLanguageUpdate, resolveStudioStyleLanguage } from "./project-language.js";
 import { createHash } from "node:crypto";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -5929,19 +5929,25 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // --- Style Analyze ---
 
   app.post("/api/v1/style/analyze", async (c) => {
-    const { text, sourceName, language } = await c.req.json<{ text: string; sourceName: string; language?: "zh" | "en" | "ru" }>();
+    const { text, sourceName, language } = await c.req.json<{ text: string; sourceName: string; language?: unknown }>();
     if (!text?.trim()) return c.json({ error: "text is required" }, 400);
 
     try {
       const { compileStyleGuide } = await import("@actalk/inkos-core");
       const config = await loadCurrentProjectConfig();
+      let resolvedLanguage: "zh" | "en" | "ru";
+      try {
+        resolvedLanguage = resolveStudioStyleLanguage(language, config.language);
+      } catch (error) {
+        return c.json({ error: error instanceof Error ? error.message : "Invalid language" }, 400);
+      }
       const guide = await compileStyleGuide({
         client: createLLMClient(config.llm),
         model: config.llm.model,
         projectRoot: root,
         referenceText: text,
         sourceName: sourceName ?? "unknown",
-        language: language ?? (config.language === "ru" ? "ru" : config.language === "en" ? "en" : "zh"),
+        language: resolvedLanguage,
       });
       return c.json({ guide });
     } catch (e) {
