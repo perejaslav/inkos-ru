@@ -18,7 +18,7 @@ describe("deriveActiveBookId", () => {
 });
 
 describe("isBookCreateChatRoute", () => {
-  it("routes new-book creation through chat instead of the standalone form page", () => {
+  it("identifies the new-book form route", () => {
     expect(isBookCreateChatRoute({ page: "book-create" })).toBe(true);
     expect(isBookCreateChatRoute({ page: "book", bookId: "alpha" })).toBe(false);
   });

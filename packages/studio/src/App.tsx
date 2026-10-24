@@ -6,6 +6,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { WorkInspector } from "./pages/WorkInspector";
 import { ChatPage } from "./pages/ChatPage";
 import { BookDetail } from "./pages/BookDetail";
+import { BookCreate } from "./pages/BookCreate";
 import { ChapterReader } from "./pages/ChapterReader";
 import { Analytics } from "./pages/Analytics";
 import { ServiceListPage } from "./pages/ServiceListPage";
@@ -267,15 +268,7 @@ export function App() {
             </div>
           )}
           {isBookCreateChatRoute(route) && (
-            <div className="absolute inset-0 flex min-w-0">
-              <ChatPage
-                mode="book-create"
-                nav={nav}
-                theme={theme}
-                t={t}
-                sse={sse}
-              />
-            </div>
+            <BookCreate nav={nav} theme={theme} t={t} />
           )}
           {route.page === "chat" && (
             <div className="absolute inset-0 flex min-w-0">

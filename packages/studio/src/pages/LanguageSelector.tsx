@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { getAppLanguage } from "../lib/app-language";
 
-export function LanguageSelector({ onSelect, onUiRussian }: { onSelect: (lang: "zh" | "en") => void; onUiRussian: () => void }) {
-  const [hovering, setHovering] = useState<"zh" | "en" | null>(null);
-  const [selected, setSelected] = useState<"zh" | "en" | null>(null);
+export function LanguageSelector({ onSelect, onUiRussian }: { onSelect: (lang: "zh" | "en" | "ru") => void; onUiRussian: () => void }) {
+  const [hovering, setHovering] = useState<"zh" | "en" | "ru" | null>(null);
+  const [selected, setSelected] = useState<"zh" | "en" | "ru" | null>(null);
 
-  const handleSelect = (lang: "zh" | "en") => {
+  const handleSelect = (lang: "zh" | "en" | "ru") => {
     setSelected(lang);
     // Brief pause for the selection animation before transitioning
     setTimeout(() => onSelect(lang), 400);
@@ -64,6 +64,23 @@ export function LanguageSelector({ onSelect, onUiRussian }: { onSelect: (lang: "
           <div className="text-sm text-muted-foreground">
             Royal Road · Kindle Unlimited · Scribble Hub
           </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSelect("ru")}
+          onMouseEnter={() => setHovering("ru")}
+          onMouseLeave={() => setHovering(null)}
+          className={`group w-80 border rounded-lg p-10 text-left transition-all duration-300 ${
+            selected === "ru"
+              ? "border-primary bg-primary/10 scale-[1.02]"
+              : hovering === "ru" ? "border-primary/50 bg-card" : "border-border bg-card/50"
+          }`}
+        >
+          <div className="font-serif text-3xl mb-4 text-foreground">Русская литература</div>
+          <div className="text-base text-foreground/70 leading-relaxed mb-6">
+            Роман · Рассказ · Фантастика · Детектив
+          </div>
+          <div className="text-sm text-muted-foreground">Русский язык произведений</div>
         </button>
       </div>
 
