@@ -251,6 +251,7 @@ export function NarrativeForecastPreview({ exec, onSelectBranch, onRecheck }: Na
 
   const { forecast, stale } = details;
   const zh = forecast.language === "zh";
+  const ru = forecast.language === "ru";
   const selectBranch = async (branchId: string) => {
     if (!onSelectBranch || stale) return;
     setPendingBranch(branchId);
@@ -278,15 +279,15 @@ export function NarrativeForecastPreview({ exec, onSelectBranch, onRecheck }: Na
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-foreground">
                 <GitFork size={16} className="text-primary" />
-                {zh ? "剧情多线推演" : "Narrative forecast"}
+                {ru ? "Прогноз развития сюжета" : zh ? "剧情多线推演" : "Narrative forecast"}
               </span>
               <span className="rounded-full border border-primary/20 bg-primary/8 px-2 py-0.5 text-[10px] font-medium tracking-wide text-primary">
-                {zh ? "非正史规划" : "NON-CANONICAL"}
+                {ru ? "НЕ КАНОН" : zh ? "非正史规划" : "NON-CANONICAL"}
               </span>
               {stale && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-800 dark:text-amber-200">
                   <AlertTriangle size={11} />
-                  {zh ? "正史已变化" : "Canon changed"}
+                  {ru ? "Канон изменился" : zh ? "正史已变化" : "Canon changed"}
                 </span>
               )}
             </div>
@@ -305,14 +306,14 @@ export function NarrativeForecastPreview({ exec, onSelectBranch, onRecheck }: Na
               className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border/60 bg-background/60 px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground disabled:opacity-50"
             >
               <RefreshCw size={12} className={rechecking ? "animate-spin" : ""} />
-              {zh ? "重新核验" : "Recheck"}
+              {ru ? "Проверить" : zh ? "重新核验" : "Recheck"}
             </button>
           )}
         </div>
         {stale && (
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/8 px-3 py-2 text-xs leading-5 text-amber-900 dark:text-amber-100">
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-            <span>{zh ? "正史输入已在生成后变化。请重新推演，不要继续采用旧分支。" : "Canonical inputs changed after generation. Regenerate before selecting a branch."}</span>
+            <span>{ru ? "Канонические данные изменились. Создайте новый прогноз перед выбором ветки." : zh ? "正史输入已在生成后变化。请重新推演，不要继续采用旧分支。" : "Canonical inputs changed after generation. Regenerate before selecting a branch."}</span>
           </div>
         )}
       </header>
