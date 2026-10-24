@@ -2912,13 +2912,17 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     }>();
 
     const now = new Date().toISOString();
-    const bookConfig = buildStudioBookConfig(body, now);
+    let bookConfig: ReturnType<typeof buildStudioBookConfig>;
+    try {
+      bookConfig = buildStudioBookConfig(body, now);
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 400);
+    }
     const bookId = bookConfig.id;
-    const bookDir = state.bookDir(bookId);
-
     if (!bookId) {
       return c.json({ error: "Could not derive a valid book id from title" }, 400);
     }
+    const bookDir = state.bookDir(bookId);
     if (await completeBookExists(bookDir)) {
       return c.json({ error: `Book "${bookId}" already exists` }, 409);
     }
@@ -2932,15 +2936,15 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       createBook: {
         title: body.title,
         ...(body.genre ? { genre: body.genre } : {}),
-        ...(body.language === "en" || body.language === "zh" || body.language === "ru" ? { language: body.language } : {}),
-        ...(body.platform ? { platform: normalizeStudioPlatform(body.platform) } : {}),
-        ...(body.chapterWordCount ? { chapterWordCount: body.chapterWordCount } : {}),
-        ...(body.targetChapters ? { targetChapters: body.targetChapters } : {}),
+        language: bookConfig.language,
+        ...(body.platform ? { platform: bookConfig.platform } : {}),
+        chapterWordCount: bookConfig.chapterWordCount,
+        targetChapters: bookConfig.targetChapters,
       },
     };
     const tool = createBookFoundationTool(pipeline, {
       actionPayload,
-      language: body.language === "ru" ? "ru" : body.language === "en" ? "en" : "zh",
+      language: bookConfig.language,
       workerSkills: () => foundationSkills,
     });
     const binding = confirmedCapabilityBinding("create_book")!;
@@ -2952,10 +2956,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
         instruction: body.blurb?.trim() || `Create ${body.title}`,
         title: body.title,
         ...(body.genre ? { genre: body.genre } : {}),
-        ...(body.platform ? { platform: normalizeStudioPlatform(body.platform) } : {}),
-        ...(body.language === "en" || body.language === "zh" || body.language === "ru" ? { language: body.language } : {}),
-        ...(body.targetChapters ? { targetChapters: body.targetChapters } : {}),
-        ...(body.chapterWordCount ? { chapterWordCount: body.chapterWordCount } : {}),
+        ...(body.platform ? { platform: bookConfig.platform } : {}),
+        language: bookConfig.language,
+        targetChapters: bookConfig.targetChapters,
+        chapterWordCount: bookConfig.chapterWordCount,
       },
     }).then(
       async (result) => {
