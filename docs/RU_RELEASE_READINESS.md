@@ -147,3 +147,10 @@
 - При обновлении книги `saveBookConfig` синхронизирует `title`, `language`, `genre`, `platform` с WorkManifest, сохраняя пользовательские поля metadata, идентификатор, профиль и дату создания.
 - Русский тест повторного открытия дополнен проверкой пользовательского тега и актуальных genre/platform.
 - Core typecheck PASS, полный набор Core 734/734 PASS; интеграция с live LLM и удалённым CI не проверялись.
+
+## Общая регрессия и стабильность E2E — 2026-10-24
+
+- Полный pnpm test: Core 734/734, Studio 319/319, CLI 90/90, всего 1143/1143 PASS.
+- Удалён дублирующий globalSetup-сборщик Core из playwright.config.ts: Core собирается один раз до старта Studio API и Vite через scripts/e2e-dev-server.mjs; ранее две сборки могли пересекаться и удалить dist во время импорта.
+- E2E создания русской книги `russian-book-create.spec.ts` 1/1 PASS после исправления. Полная матрица E2E в этом прогоне не запускалась.
+- Реальная LLM-генерация и GitHub Actions Windows/Linux CI ещё NOT VERIFIED.

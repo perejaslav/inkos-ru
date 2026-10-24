@@ -2,12 +2,9 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  // Rebuild @actalk/inkos-core before starting the E2E server.  The API server
-  // (tsx watch src/api/index.ts) imports core via its compiled dist/index.js,
-  // not the TypeScript source.  A stale dist causes runtime behaviour to
-  // diverge from the sources, making otherwise-correct logic invisible to the
-  // test server.  See e2e/global-setup.ts for details.
-  globalSetup: "./e2e/global-setup.ts",
+  // The E2E launcher builds Core before starting both API and Vite.
+  // Do not also rebuild in globalSetup: it races with the running servers
+  // and temporarily deletes dist/ while Vite resolves workspace modules.
   timeout: 60_000,
   // Run specs serially against the single shared dev server. The authoring
   // agent flow streams a long SSE turn; with parallel workers, concurrent
