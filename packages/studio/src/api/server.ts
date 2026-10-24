@@ -1,4 +1,4 @@
-import { parseStudioProjectLanguage } from "./project-language.js";
+import { parseStudioProjectLanguage, parseStudioBookLanguageUpdate } from "./project-language.js";
 import { createHash } from "node:crypto";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -5818,6 +5818,12 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       status?: string;
       language?: string;
     }>();
+    let languageUpdate: "zh" | "en" | "ru" | undefined;
+    try {
+      languageUpdate = parseStudioBookLanguageUpdate(updates.language);
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : "Invalid language" }, 400);
+    }
     try {
       const book = await state.loadBookConfig(id);
       const updated = {
@@ -5825,7 +5831,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
         ...(updates.chapterWordCount !== undefined ? { chapterWordCount: Number(updates.chapterWordCount) } : {}),
         ...(updates.targetChapters !== undefined ? { targetChapters: Number(updates.targetChapters) } : {}),
         ...(updates.status !== undefined ? { status: updates.status as typeof book.status } : {}),
-        ...(updates.language !== undefined ? { language: updates.language as "zh" | "en" | "ru" } : {}),
+        ...(languageUpdate !== undefined ? { language: languageUpdate } : {}),
         updatedAt: new Date().toISOString(),
       };
       await state.saveBookConfig(id, updated);

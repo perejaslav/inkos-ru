@@ -9,3 +9,10 @@ export function parseStudioProjectLanguage(body: unknown): ContentLanguage {
   if (typeof value !== "string") throw new Error("Expected language to be a string");
   return normalizeContentLanguage(value);
 }
+
+/** Validate an optional book-language update without silently defaulting to Chinese. */
+export function parseStudioBookLanguageUpdate(value: unknown): ContentLanguage | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") throw new Error("Expected language to be a string");
+  return normalizeContentLanguage(value);
+}
