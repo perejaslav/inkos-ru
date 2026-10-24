@@ -12,16 +12,23 @@
 - Исправлен тестовый teardown: evictAgentCache(sessionId) перед удалением временной директории. Локальный целевой тест PASS; CI нового коммита требует подтверждения.
 - Локальные LLM endpoints 8081, 1234, 11434 недоступны. Реальная LLM-приёмка NOT VERIFIED.
 
+## Проверка 2026-10-25 — Play RU
+
+- Исправлено определение русского языка в play_edit и play_revise: ru ранее трактовался как zh через language !== en; добавлены русские сообщения и подписи.
+- Добавлен русский тест Play world edit, проверяющий сохранение кириллических меток и статуса. Полный pnpm test 1146/1146 PASS (Core 735, Studio 321, CLI 90); pnpm -r typecheck PASS.
+- Реальный художественный LLM-прогон по-прежнему NOT VERIFIED: локальные 8081, 1234, 11434 не отвечают.
+- CI SHA 337bf4fb на момент проверки всё ещё in_progress, результат не подтверждён.
+
 ## Подтверждено
 
 | Проверка | Результат |
 |---|---|
 | pnpm build (Core/Studio/CLI) | PASS; ru-build-2.log |
 | pnpm -r typecheck | PASS; ru-final-type.log |
-| Автотесты Core | 734 / 734 PASS |
+| Автотесты Core | 735 / 735 PASS |
 | Автотесты Studio | 321 / 321 PASS |
 | Автотесты CLI | 90 / 90 PASS |
-| Итого unit/integration | 1145 / 1145 PASS |
+| Итого unit/integration | 1146 / 1146 PASS |
 | Studio Playwright E2E Windows | 15 / 15 PASS |
 | GitHub CI Windows/Linux × Node 22/24 | PASS; run 40129847405, SHA 18959f54 |
 | Fork release safety | 4 / 4 PASS; release workflow disabled_manually |

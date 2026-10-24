@@ -2541,7 +2541,8 @@ export function createPlayEditTool(
           ? "There is no interactive world to edit yet. Start one with play_start first."
           : "还没有可编辑的互动世界。先用 play_start 开一局。");
       }
-      const isZh = (world.language ?? "zh") !== "en";
+      const isZh = world.language === "zh";
+      const isRu = world.language === "ru";
 
       const patch: Parameters<PlayStore["updateWorld"]>[1] = {};
       if(params.choiceCount!==undefined)patch.choiceCount=params.choiceCount;
@@ -2587,9 +2588,9 @@ export function createPlayEditTool(
           upsertPlayEditEntity(db, {
             id: "actor_player",
             type: "actor",
-            label: existingPlayer?.label ?? (isZh ? "玩家" : "Player"),
+            label: existingPlayer?.label ?? (isRu ? "Игрок" : isZh ? "玩家" : "Player"),
             summary: playerPersona,
-            status: isZh ? "已更新" : "Updated",
+            status: isRu ? "Обновлено" : isZh ? "已更新" : "Updated",
           });
           updatedEntities += 1;
         }
@@ -2609,7 +2610,7 @@ export function createPlayEditTool(
           graphEditedAt: new Date().toISOString(),
         });
         return textResult(
-          params.note?.trim() || (isZh ? "互动世界设定已更新。" : "Interactive world settings updated."),
+          params.note?.trim() || (isRu ? "Настройки интерактивного мира обновлены." : isZh ? "互动世界设定已更新。" : "Interactive world settings updated."),
           {
             kind: "play_world_updated",
             workId: worldId,
@@ -2752,7 +2753,8 @@ export function createPlayReviseTool(
           ? "There is no interactive world to redo yet. Start one with play_start first."
           : "还没有可重做的互动世界。先用 play_start 开一局。");
       }
-      const isZh = (world.language ?? "zh") !== "en";
+      const isZh = world.language === "zh";
+      const isRu = world.language === "ru";
       const activatedSkills = resolveProductionToolSkills(options);
       const db = createPlayDB(store.runDir(worldId, runId));
       let runner: ({
@@ -2791,7 +2793,7 @@ export function createPlayReviseTool(
             variantId,
           }));
           return textResult(
-            restored.sceneText || (isZh ? "已切换到指定互动回合版本。" : "Switched to the requested play turn variant."),
+            restored.sceneText || (isRu ? "Восстановлен выбранный вариант игрового хода." : isZh ? "已切换到指定互动回合版本。" : "Switched to the requested play turn variant."),
             {
               kind: "play_variant_restored",
               presentation: "immersive-scene",

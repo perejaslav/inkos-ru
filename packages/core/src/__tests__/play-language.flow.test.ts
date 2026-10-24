@@ -2,7 +2,7 @@ import {mkdtemp,rm,mkdir,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {expect,it} from 'vitest';
-import {createPlayStartTool} from '../agent/agent-tools.js';
+import {createPlayEditTool,createPlayStartTool} from '../agent/agent-tools.js';
 import {PlayStore} from '../play/play-store.js';
 import {PlayRunner} from '../play/play-runner.js';
 import {seedPlayGraph} from '../play/play-reducer.js';
@@ -46,4 +46,21 @@ it('persists the requested world language over the project default and uses it o
     expect(after).toMatchObject({title:before.title,profileId:before.profileId,language:before.language,createdAt:before.createdAt,metadata:before.metadata,lineage:before.lineage});
     expect(after.artifacts.find(artifact=>artifact.id===before.artifacts[0].id)).toEqual(before.artifacts[0]);
   }finally{await rm(root,{recursive:true,force:true});}
+});
+
+it('uses Russian labels and feedback when editing a Russian Play world',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'inkos-play-ru-edit-'));
+ try {
+  const store=new PlayStore(root);
+  await store.createWorld({id:'ru-world',title:'Русский мир',language:'ru',mode:'open',premise:'Начало',worldContract:'',visualContract:''});
+  await store.ensureRun('ru-world','main');
+  const seeded=(await import('../play/play-db-factory.js')).createPlayDB(store.runDir('ru-world','main'));
+  seeded.upsertEntity({id:'actor_player',type:'actor',label:'Игрок',summary:'',status:'',createdEventId:'evt-0',updatedEventId:'evt-0'}); seeded.close?.();
+  const edit=createPlayEditTool(root,'ru-world','ru');
+  const result=await edit.execute('edit',{playerPersona:'Исследователь'});
+  const db=(await import('../play/play-db-factory.js')).createPlayDB(store.runDir('ru-world','main'));
+  try { expect(db.getEntity('actor_player')).toMatchObject({label:'Игрок',status:'Обновлено',summary:'Исследователь'}); }
+  finally { db.close?.(); }
+  expect(JSON.stringify(result)).toContain('Настройки интерактивного мира обновлены.');
+ } finally { await rm(root,{recursive:true,force:true}); }
 });
