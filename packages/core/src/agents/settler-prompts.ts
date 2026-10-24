@@ -4,7 +4,7 @@ import type { BookRules } from "../models/book-rules.js";
 export function buildSettlerSystemPrompt(
   book: BookConfig,
   bookRules: BookRules | null,
-  language: "zh" | "en",
+  language: "zh" | "en" | "ru",
 ): string {
   const fullCast = bookRules?.enableFullCastTracking
     ? language === "en"
@@ -23,7 +23,7 @@ export function buildSettlerUserPrompt(params: {
   readonly selectedEvidenceBlock?: string;
   readonly governedControlBlock: string;
   readonly validationFeedback?: string;
-  readonly language?: "zh" | "en";
+  readonly language?: "zh" | "en" | "ru";
 }): string {
   const isEnglish = params.language === "en";
   const heading = (en: string, zh: string) => isEnglish ? en : zh;

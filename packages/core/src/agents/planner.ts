@@ -121,7 +121,7 @@ export class PlannerAgent extends BaseAgent {
     readonly chapterNumber: number;
     readonly contextPackage: ContextPackage;
     readonly currentInstruction?: string;
-    readonly language?: "zh" | "en";
+    readonly language?: "zh" | "en" | "ru";
     readonly lengthSpec: LengthSpec;
   }): Promise<ChapterMemo> {
     const language = input.language ?? "zh";

@@ -92,7 +92,7 @@ function buildAgentBookConfig(input: {
   readonly title: string;
   readonly genre?: string;
   readonly platform?: Platform;
-  readonly language?: "zh" | "en";
+  readonly language?: "zh" | "en" | "ru";
   readonly targetChapters?: number;
   readonly chapterWordCount?: number;
   readonly minChapterLength?: number;
@@ -482,7 +482,7 @@ function proposedActionSessionKind(action: ProposedActionName): ProposedSessionK
 
 function proposedActionPayload(
   params: ProposeActionParamsType,
-  language: "zh" | "en",
+  language: "zh" | "en" | "ru",
 ): ActionPayload | undefined {
   const payloadKey = PROPOSAL_PAYLOAD_KEYS[params.action];
   if (!payloadKey) return undefined;
@@ -631,7 +631,7 @@ function assertExecutableProposedAction(params: ProposeActionParamsType, payload
 }
 
 export function createProposeActionTool(
-  language: "zh" | "en" = "zh",
+  language: "zh" | "en" | "ru" = "zh",
   options: ProposeActionToolOptions = {},
 ): AgentTool<any, unknown> {
   const allowed = options.allowedActions;
@@ -1695,7 +1695,7 @@ export function createShortFictionRunTool(
   projectRoot: string,
   options: {
     readonly actionPayload?: ActionPayload;
-    readonly language?: "zh" | "en";
+    readonly language?: "zh" | "en" | "ru";
     readonly activeWorkId?: string;
   } & SkillAwareProductionOptions = {},
 ): AgentTool<typeof ShortFictionRunParams> {
@@ -1854,7 +1854,7 @@ export function createScriptCreationTool(
   projectRoot: string,
   options: {
     readonly actionPayload?: ActionPayload;
-    readonly language?: "zh" | "en";
+    readonly language?: "zh" | "en" | "ru";
   } & SkillAwareProductionOptions = {},
 ): AgentTool<typeof ScriptCreateParams> {
   return {
@@ -1945,7 +1945,7 @@ export function createStoryboardCreationTool(
   projectRoot: string,
   options: {
     readonly actionPayload?: ActionPayload;
-    readonly language?: "zh" | "en";
+    readonly language?: "zh" | "en" | "ru";
   } & SkillAwareProductionOptions = {},
 ): AgentTool<typeof StoryboardCreateParams> {
   return {
@@ -2043,7 +2043,7 @@ export function createInteractiveFilmCreationTool(
   projectRoot: string,
   options: {
     readonly actionPayload?: ActionPayload;
-    readonly language?: "zh" | "en";
+    readonly language?: "zh" | "en" | "ru";
   } & SkillAwareProductionOptions = {},
 ): AgentTool<typeof InteractiveFilmCreateParams> {
   return {
@@ -2209,7 +2209,7 @@ type PlayStartParamsType = Static<typeof PlayStartParams>;
 
 export interface PlayStartToolOptions extends SkillAwareProductionOptions {
   readonly actionPayload?: ActionPayload;
-  readonly language?: "zh" | "en";
+  readonly language?: "zh" | "en" | "ru";
   readonly runnerFactory?: (input: {
     readonly projectRoot: string;
     readonly worldId: string;
@@ -2386,7 +2386,7 @@ const PlayStepParams = Type.Object({
 type PlayStepParamsType = Static<typeof PlayStepParams>;
 
 export interface PlayStepToolOptions extends SkillAwareProductionOptions {
-  readonly language?: "zh" | "en";
+  readonly language?: "zh" | "en" | "ru";
   readonly runnerFactory?: (input: {
     readonly projectRoot: string;
     readonly worldId: string;
@@ -2419,7 +2419,7 @@ const PlayReviseParams = Type.Object({
 type PlayReviseParamsType = Static<typeof PlayReviseParams>;
 
 export interface PlayReviseToolOptions extends SkillAwareProductionOptions {
-  readonly language?: "zh" | "en";
+  readonly language?: "zh" | "en" | "ru";
   readonly runnerFactory?: (input: {
     readonly projectRoot: string;
     readonly worldId: string;
@@ -2518,7 +2518,7 @@ type PlayEditParamsType = Static<typeof PlayEditParams>;
 export function createPlayEditTool(
   projectRoot: string,
   sessionId: string,
-  language: "zh" | "en" = "zh",
+  language: "zh" | "en" | "ru" = "zh",
 ): AgentTool<typeof PlayEditParams> {
   return {
     name: "play_edit",
@@ -2972,7 +2972,7 @@ const ResyncChapterStateParams = Type.Object({
 export function createResyncChapterStateTool(
   pipeline: PipelineRunner,
   activeBookId: string | null,
-  options: SkillAwareProductionOptions & { readonly language?: "zh" | "en" } = {},
+  options: SkillAwareProductionOptions & { readonly language?: "zh" | "en" | "ru" } = {},
 ): AgentTool<typeof ResyncChapterStateParams> {
   return {
     name: "resync_chapter_state",

@@ -1,6 +1,6 @@
 import type {ShortFictionMeasurements} from "../agents/short-fiction.js";
 
-export type ShortFictionLanguage = "zh" | "en";
+export type ShortFictionLanguage = "zh" | "en" | "ru";
 
 export interface ShortFictionReferencePromptInput { readonly text?: string; }
 export interface ShortFictionOutlinePromptInput {

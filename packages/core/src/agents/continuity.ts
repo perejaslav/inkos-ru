@@ -31,7 +31,7 @@ export class ContinuityAuditor extends BaseAgent {
     chapterNumber: number,
     _genre: string | undefined,
     options: {
-      readonly language: "zh" | "en";
+      readonly language: "zh" | "en" | "ru";
       readonly contextPackage: ContextPackage;
       readonly temperature?: number;
     },

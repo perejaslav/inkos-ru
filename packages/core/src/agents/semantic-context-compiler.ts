@@ -7,7 +7,7 @@ export interface SemanticContextCompilerInput {
   readonly intent: string;
   readonly maxTokens: number;
   readonly fragments: ReadonlyArray<ContextFragment>;
-  readonly language: "zh" | "en";
+  readonly language: "zh" | "en" | "ru";
 }
 
 /** Infrastructure worker shared by story and Play context assembly. */

@@ -9,7 +9,7 @@ export function buildWriterSystemPrompt(
   bookRules: BookRules | null,
   bookRulesBody: string,
   styleGuide: string,
-  languageOverride?: "zh" | "en",
+  languageOverride?: "zh" | "en" | "ru",
   lengthSpec?: LengthSpec,
 ): string {
   const language = languageOverride ?? book.language;
@@ -36,7 +36,7 @@ export function buildWriterSystemPrompt(
   return sections.filter(Boolean).join("\n\n");
 }
 
-function governedContract(language: "zh" | "en"): string {
+function governedContract(language: "zh" | "en" | "ru"): string {
   return language === "en"
     ? `## Authority
 The current user instruction and chapter memo govern this chapter. Established facts, explicit prohibitions, selected context, and real hook ids remain binding. The outline is a fallback only when it does not conflict with higher authority. Satisfy every populated memo requirement in the prose; do not duplicate or rename an existing narrative promise.`
@@ -44,20 +44,20 @@ The current user instruction and chapter memo govern this chapter. Established f
 当前用户指令和 chapter memo 决定本章任务；既成事实、显式禁令、已选上下文和真实 hook id 必须保留。卷纲仅在无冲突时作为兜底。memo 已填写的每项要求都要在正文落地，不要为同一承诺重复开 hook，也不要改名既有叙事承诺。`;
 }
 
-function lengthContract(spec: LengthSpec, language: "zh" | "en"): string {
+function lengthContract(spec: LengthSpec, language: "zh" | "en" | "ru"): string {
   return language === "en"
     ? `## Length\nUser target: ${spec.target} words. Preserve scene completeness instead of padding or cutting mechanically.`
     : `## 字数\n用户目标：${spec.target} 字。保持场景完整，不要机械注水或裁切。`;
 }
 
-function narrativePersonContract(bookRules: BookRules | null, language: "zh" | "en"): string {
+function narrativePersonContract(bookRules: BookRules | null, language: "zh" | "en" | "ru"): string {
   const person = bookRules?.narrativePerson;
   if (!person) return "";
   if (language === "en") return `## Narrative person\n${person}; this durable constraint overrides model defaults.`;
   return `## 叙事人称\n${person}；该持久约束优先于模型默认。`;
 }
 
-function protagonistContract(bookRules: BookRules | null, language: "zh" | "en"): string {
+function protagonistContract(bookRules: BookRules | null, language: "zh" | "en" | "ru"): string {
   const protagonist = bookRules?.protagonist;
   if (!protagonist) return "";
   const separator = language === "en" ? ", " : "、";

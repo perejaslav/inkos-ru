@@ -1,6 +1,6 @@
 import type { LengthCountingMode, LengthSpec } from "../models/length-governance.js";
 
-export type LengthLanguage = "zh" | "en";
+export type LengthLanguage = "zh" | "en" | "ru";
 export type SupportedLengthLanguage = LengthLanguage | "ru";
 
 // Per-chapter length default in the book's native unit: Chinese counts characters (3000字),

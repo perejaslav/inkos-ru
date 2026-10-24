@@ -10,7 +10,7 @@ export async function compileStyleGuide(input: {
   readonly projectRoot: string;
   readonly referenceText: string;
   readonly sourceName?: string;
-  readonly language?: "zh" | "en";
+  readonly language?: "zh" | "en" | "ru";
   readonly activeSkills?: ReadonlyArray<ActivatedSkillGuidance>;
   readonly signal?: AbortSignal;
 }): Promise<string> {

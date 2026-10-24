@@ -15,7 +15,7 @@ import type {BookConfig} from "../../models/book.js";
 interface LongformToolOptions {
   readonly activeWork?: {readonly work:WorkManifest;readonly projectRoot:string};
   readonly actionPayload?: ActionPayload;
-  readonly language?: "zh" | "en";
+  readonly language?: "zh" | "en" | "ru";
   readonly activeSkills?: () => ReadonlyArray<ActivatedSkillGuidance>;
   readonly workerSkills?: (worker: string) => ReadonlyArray<ActivatedSkillGuidance>;
 }

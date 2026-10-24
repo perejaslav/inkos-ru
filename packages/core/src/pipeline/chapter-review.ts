@@ -36,7 +36,7 @@ export async function reviewChapterDraft(params: {
       chapterNumber: number,
       genre: string | undefined,
       options: {
-        readonly language: "zh" | "en";
+        readonly language: "zh" | "en" | "ru";
         readonly contextPackage: ContextPackage;
         readonly temperature?: number;
       },

@@ -233,7 +233,7 @@ const ReviseNodeParams = Type.Object({
   }),
 });
 
-export type FilmAuthoringLanguage = "zh" | "en";
+export type FilmAuthoringLanguage = "zh" | "en" | "ru";
 
 function nodeSystemPrompt(language: FilmAuthoringLanguage, revision = false): string {
   const operation = language === 'en'

@@ -9,7 +9,7 @@ import type { ChapterIntent, ChapterMemo, ContextPackage } from "../models/input
 export function renderMemoAsNarrativeBlock(
   memo: ChapterMemo,
   intent: ChapterIntent | undefined,
-  language: "zh" | "en" = "zh",
+  language: "zh" | "en" | "ru" = "zh",
 ): string {
   const isEn = language === "en";
   const sections: string[] = [];
@@ -31,14 +31,14 @@ export function renderMemoAsNarrativeBlock(
 
 export function buildNarrativeIntentBrief(
   chapterIntent: string,
-  _language: "zh" | "en" = "zh",
+  _language: "zh" | "en" | "ru" = "zh",
 ): string {
   return chapterIntent.trim();
 }
 
 export function renderNarrativeSelectedContext(
   entries: ReadonlyArray<ContextPackage["selectedContext"][number]>,
-  language: "zh" | "en" = "zh",
+  language: "zh" | "en" | "ru" = "zh",
 ): string {
   const heading = language === "en" ? "Evidence" : "证据";
   const reasonLabel = language === "en" ? "reason" : "原因";

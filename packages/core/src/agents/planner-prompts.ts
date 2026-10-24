@@ -1,7 +1,7 @@
 import type { ContextPackage } from "../models/input-governance.js";
 import { renderNarrativeSelectedContext } from "../utils/narrative-control.js";
 
-export function getPlannerMemoSystemPrompt(language: "zh" | "en" = "zh"): string {
+export function getPlannerMemoSystemPrompt(language: "zh" | "en" | "ru" = "zh"): string {
   return language === "en"
     ? "Compile the supplied governed context into one chapter memo. Do not write prose. Professional planning methodology comes only from the activated Skill. Preserve user direction and established facts, use only supplied hook ids, and submit one concrete goal plus a readable Markdown plan through the result tool."
     : "把输入的 governed context 编译为一份章节 memo，不写正文。专业规划方法只来自已激活 Skill。保留用户方向和既成事实，只使用输入中存在的 hook id，并通过结果工具提交一个具体目标和完整可读的 Markdown 计划。";
@@ -16,7 +16,7 @@ export function buildPlannerUserMessage(input: {
     readonly target: number;
     readonly unit: string;
   };
-  readonly language?: "zh" | "en";
+  readonly language?: "zh" | "en" | "ru";
 }): string {
   const language = input.language ?? "zh";
   const context = renderNarrativeSelectedContext(input.contextPackage.selectedContext, language);

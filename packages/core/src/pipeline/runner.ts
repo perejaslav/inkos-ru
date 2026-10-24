@@ -83,7 +83,7 @@ function mergeChapterRevisionInstructions(
 export function buildSpinoffFoundationContext(
   parentCanon: string,
   direction: string | undefined,
-  language: "zh" | "en",
+  language: "zh" | "en" | "ru",
 ): string {
   const dir = direction?.trim();
   if (language === "en") {

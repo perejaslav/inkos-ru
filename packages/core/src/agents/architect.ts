@@ -129,7 +129,7 @@ ${reviseFrom.userFeedback || "（无）"}
     readonly book: BookConfig;
     readonly contextBlock: string;
     readonly reviewFeedbackBlock: string;
-    readonly language: "zh" | "en";
+    readonly language: "zh" | "en" | "ru";
   }): string {
     const { book, contextBlock, reviewFeedbackBlock, language } = params;
     const metadata = language === "en"
@@ -142,7 +142,7 @@ ${reviseFrom.userFeedback || "（无）"}
   async writeFoundationFiles(
     bookDir: string,
     output: ArchitectOutput,
-    language: "zh" | "en",
+    language: "zh" | "en" | "ru",
     mode: "init" | "revise" = "init",
   ): Promise<void> {
     const writes: AtomicFileWrite[] = [
@@ -262,7 +262,7 @@ ${reviseFrom.userFeedback || "（无）"}
   private async generateFoundationInStages(input: {
     readonly systemPrompt: string;
     readonly userMessage: string;
-    readonly language: "zh" | "en";
+    readonly language: "zh" | "en" | "ru";
     readonly temperature: number;
     readonly onOutline?: (outline: { readonly storyFrame: string; readonly volumeMap: string }) => void | Promise<void>;
   }): Promise<ArchitectOutput> {
@@ -344,7 +344,7 @@ ${reviseFrom.userFeedback || "（无）"}
   }
   private buildReviewFeedbackBlock(
     reviewFeedback: string | undefined,
-    language: "zh" | "en",
+    language: "zh" | "en" | "ru",
   ): string {
     const trimmed = reviewFeedback?.trim();
     if (!trimmed) return "";
