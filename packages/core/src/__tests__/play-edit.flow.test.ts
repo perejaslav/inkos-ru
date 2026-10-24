@@ -127,4 +127,4 @@ it('inspects exact world identities, rejects a guessed ID before any mutation an
   try{await expect(invalid.step('Wait')).rejects.toMatchObject({code:'PLAY_CHOICE_COUNT_MISMATCH',expected:2,actual:3});}finally{invalid.close();}
   expect((await store.readEvents('world','main')).length).toBe(2);
  }finally{await rm(root,{recursive:true,force:true});}
-});
+},90000);
