@@ -481,6 +481,20 @@ export class WriterAgent extends BaseAgent {
     const chapterContextBlock = this.buildChapterContextBlock(params.externalContext, language);
     const briefNarrative = renderMemoAsNarrativeBlock(params.chapterMemo, params.chapterIntentData, language);
 
+    if (language === "ru") {
+      return `Напиши главу ${params.chapterNumber} по-русски.
+
+${chapterContextBlock}
+
+${userDirectionBlock}
+${briefNarrative}
+
+## Выбранный контекст
+${contextSections || "(нет)"}
+
+${lengthRequirementBlock}
+- Передай полное название главы и художественный текст через инструмент результата черновика главы.`;
+    }
     if (params.language === "en") {
       return `Write chapter ${params.chapterNumber}.
 
@@ -513,6 +527,12 @@ ${lengthRequirementBlock}
   private buildChapterContextBlock(externalContext: string | undefined, language: "zh" | "en" | "ru"): string {
     const trimmed = externalContext?.trim();
     if (!trimmed) return "";
+    if (language === "ru") {
+      return `## Указание автора для этой главы (высший приоритет)
+${trimmed}
+
+Следуй прямому указанию автора. Если название главы задано, передай его точно. Сохраняй непрерывность сюжета; общий план не может заменить это требование.`;
+    }
     if (language === "en") {
       return `## Per-chapter user instruction (highest priority)
 ${trimmed}
@@ -553,6 +573,12 @@ ${selectedContext || "- none"}\n`;
       ...(lengthSpec.minChapterLength!==undefined?[`Minimum: ${lengthSpec.minChapterLength}`]:[]),
       ...(lengthSpec.maxChapterLength!==undefined?[`Maximum: ${lengthSpec.maxChapterLength}`]:[]),
     ];
+    if (language === "ru") {
+      return `Требования:
+- Целевой объём: ${lengthSpec.target} слов
+- ${bounds.join("; ") || "Жёсткие границы не заданы."} (слова)
+- Сохраняй целостность сцены, не дописывай и не сокращай механически.`;
+    }
     if (language === "en") {
       return `Requirements:
 - User target length: ${lengthSpec.target} words

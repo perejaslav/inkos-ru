@@ -172,6 +172,16 @@ function buildRevisionProtocol(mode: ReviseMode, language: "zh" | "en" | "ru"): 
     "anti-detect": { en: "Change wording only while preserving story facts and causality.", zh: "只调整文字表面，保持剧情事实和因果。" },
     "spot-fix": { en: "Select only the source line ranges needed for the local request, then replace those ranges while preserving surrounding text.", zh: "先选择局部请求涉及的原文行范围，再替换这些范围，保留范围外正文。" },
   };
+  if (language === "ru") {
+    const ru: Record<ReviseMode, string> = {
+      polish: "Исправь только формулировки, сохраняя факты, события, персонажей и причинные связи.",
+      rewrite: "Перепиши только затронутые фрагменты; всю главу — лишь когда запрос охватывает её целиком.",
+      rework: "Можешь перестроить сцены и конфликт только в границах предоставленных полномочий.",
+      "anti-detect": "Меняй только словесную форму, сохраняя факты и причинные связи.",
+      "spot-fix": "Выбери минимальные диапазоны строк для локального исправления и сохрани остальной текст."
+    };
+    return `Редактируй по активированному профессиональному Skill и управляемому контексту. ${ru[mode]} Передай результат через обязательный инструмент.`;
+  }
   return language === "en"
     ? `Revise with the activated professional Skill and governed context. ${modes[mode].en} Submit the result through the required tool.`
     : `按已激活的专业 Skill 和 governed context 修订。${modes[mode].zh}通过指定结果工具提交。`;

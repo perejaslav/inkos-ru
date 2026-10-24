@@ -37,7 +37,9 @@ export class ContinuityAuditor extends BaseAgent {
     },
   ): Promise<AuditResult> {
     const isEnglish = options.language === "en";
-    const systemPrompt = isEnglish
+    const systemPrompt = options.language === "ru"
+      ? "Проверь главу по активированному Skill рецензирования и предоставленному управляемому контексту. Каждое замечание сопровождай кодом, оценкой и точными номерами строк исходного текста. Не оценивай объём самостоятельно: его считает приложение. Дай краткое резюме; пустой массив observations допустим."
+      : isEnglish
       ? "Audit this chapter against the activated review Skill and supplied governed context. Identify each observation with a code, assessment and exact numbered source lines. Do not estimate length; the host computes it. Return a concise overall summary. An empty observations array is valid."
       : "按已激活的审稿 Skill 和权威上下文审查本章。为每条观察提交代码、判断以及所给编号原文中的确切证据行。不估算字数，字数由宿主计算。提交简短总结，observations 为空是合法结果。";
     const governedContext = renderNarrativeSelectedContext(

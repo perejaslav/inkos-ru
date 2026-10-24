@@ -2,6 +2,7 @@ import type { ContextPackage } from "../models/input-governance.js";
 import { renderNarrativeSelectedContext } from "../utils/narrative-control.js";
 
 export function getPlannerMemoSystemPrompt(language: "zh" | "en" | "ru" = "zh"): string {
+  if (language === "ru") return "Составь по предоставленному управляемому контексту план одной главы. Не пиши художественный текст. Методика планирования определяется только активированным Skill. Сохраняй указания автора и установленные факты, используй только переданные идентификаторы сюжетных крючков (hook id). Через инструмент результата передай одну конкретную цель и понятный план в Markdown.";
   return language === "en"
     ? "Compile the supplied governed context into one chapter memo. Do not write prose. Professional planning methodology comes only from the activated Skill. Preserve user direction and established facts, use only supplied hook ids, and submit one concrete goal plus a readable Markdown plan through the result tool."
     : "把输入的 governed context 编译为一份章节 memo，不写正文。专业规划方法只来自已激活 Skill。保留用户方向和既成事实，只使用输入中存在的 hook id，并通过结果工具提交一个具体目标和完整可读的 Markdown 计划。";
@@ -22,6 +23,16 @@ export function buildPlannerUserMessage(input: {
   const context = renderNarrativeSelectedContext(input.contextPackage.selectedContext, language);
   const instruction = input.currentInstruction?.trim();
   const previous = input.previousChapter?.trim();
+  if (language === "ru") {
+    return [
+      `# План главы ${input.chapterNumber}`,
+      instruction ? `## Указание автора\n${instruction}` : "",
+      `## Управляемый контекст\n${context}`,
+      previous ? `## Предыдущая глава\n${previous}` : "",
+      "## Целевой объём",
+      `Цель автора: ${input.lengthBudget.target} ${input.lengthBudget.unit}. Это ограничение для работы над текстом, а не оценка его качества.`,
+    ].filter(Boolean).join("\n\n");
+  }
   if (language === "en") {
     return [
       `# Chapter ${input.chapterNumber} memo request`,

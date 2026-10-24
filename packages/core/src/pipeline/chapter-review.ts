@@ -56,7 +56,7 @@ export async function reviewChapterDraft(params: {
       params.chapterNumber,
       params.book.genre,
       {
-        language: params.lengthSpec.countingMode === "en_words" ? "en" : "zh",
+        language: params.lengthSpec.countingMode === "ru_words" ? "ru" : params.lengthSpec.countingMode === "en_words" ? "en" : "zh",
         contextPackage: params.controlInput.contextPackage,
         temperature: 0.3,
       },

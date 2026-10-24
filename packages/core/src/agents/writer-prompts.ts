@@ -14,7 +14,13 @@ export function buildWriterSystemPrompt(
 ): string {
   const language = languageOverride ?? book.language;
   const resolvedLength = lengthSpec ?? buildLengthSpec(book.chapterWordCount, language);
-  const sections = language === "en"
+  const sections = language === "ru" ? [
+    `Напиши одну главу произведения в жанре ${book.genre} для площадки ${book.platform}. Пиши художественный текст по-русски, соблюдая активированные профессиональные Skills.`,
+    governedContract("ru"), lengthContract(resolvedLength, "ru"),
+    narrativePersonContract(bookRules, "ru"), protagonistContract(bookRules, "ru"),
+    authorityBlock("Правила книги", bookRulesBody),
+    authorityBlock("Руководство по стилю", styleGuide),
+  ] : language === "en"
     ? [
         `Write one chapter for the active ${book.genre} Work on ${book.platform} using the activated professional Skills.`,
         governedContract("en"),
@@ -37,6 +43,8 @@ export function buildWriterSystemPrompt(
 }
 
 function governedContract(language: "zh" | "en" | "ru"): string {
+  if (language === "ru") return `## Приоритет требований
+Указание автора и план главы управляют задачей. Установленные факты, прямые запреты, выбранный контекст и настоящие идентификаторы сюжетных крючков обязательны. Общий план произведения используется только при отсутствии противоречий с приоритетными источниками. Реализуй все заполненные требования плана в тексте. Не дублируй существующие сюжетные обещания и не переименовывай их.`;
   return language === "en"
     ? `## Authority
 The current user instruction and chapter memo govern this chapter. Established facts, explicit prohibitions, selected context, and real hook ids remain binding. The outline is a fallback only when it does not conflict with higher authority. Satisfy every populated memo requirement in the prose; do not duplicate or rename an existing narrative promise.`
@@ -45,6 +53,7 @@ The current user instruction and chapter memo govern this chapter. Established f
 }
 
 function lengthContract(spec: LengthSpec, language: "zh" | "en" | "ru"): string {
+  if (language === "ru") return `## Объём\nЦелевой объём: ${spec.target} слов. Сохраняй целостность сцен; не добавляй пустой текст и не сокращай механически.`;
   return language === "en"
     ? `## Length\nUser target: ${spec.target} words. Preserve scene completeness instead of padding or cutting mechanically.`
     : `## 字数\n用户目标：${spec.target} 字。保持场景完整，不要机械注水或裁切。`;
@@ -53,6 +62,7 @@ function lengthContract(spec: LengthSpec, language: "zh" | "en" | "ru"): string 
 function narrativePersonContract(bookRules: BookRules | null, language: "zh" | "en" | "ru"): string {
   const person = bookRules?.narrativePerson;
   if (!person) return "";
+  if (language === "ru") return `## Лицо повествования\n${person}; это постоянное требование приоритетнее настроек модели.`;
   if (language === "en") return `## Narrative person\n${person}; this durable constraint overrides model defaults.`;
   return `## 叙事人称\n${person}；该持久约束优先于模型默认。`;
 }
@@ -60,10 +70,11 @@ function narrativePersonContract(bookRules: BookRules | null, language: "zh" | "
 function protagonistContract(bookRules: BookRules | null, language: "zh" | "en" | "ru"): string {
   const protagonist = bookRules?.protagonist;
   if (!protagonist) return "";
-  const separator = language === "en" ? ", " : "、";
+  const separator = language === "zh" ? "、" : ", ";
   const locks = protagonist.personalityLock.join(separator);
   const boundaries = protagonist.behavioralConstraints.join(language === "en" ? "; " : "；");
   const prohibitions = bookRules.prohibitions.join(language === "en" ? "; " : "；");
+  if (language === "ru") return `## Обязательные характеристики героя\nИмя: ${protagonist.name}\nЧерты личности: ${locks || "(нет)"}\nОграничения поведения: ${boundaries || "(нет)"}\nЗапреты книги: ${prohibitions || "(нет)"}`;
   return language === "en"
     ? `## Protagonist authority\nName: ${protagonist.name}\nPersonality: ${locks || "(none)"}\nBehavioral constraints: ${boundaries || "(none)"}\nBook prohibitions: ${prohibitions || "(none)"}`
     : `## 主角权威\n名字：${protagonist.name}\n性格锁：${locks || "（无）"}\n行为约束：${boundaries || "（无）"}\n本书禁忌：${prohibitions || "（无）"}`;
