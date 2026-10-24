@@ -136,7 +136,9 @@ export function BookDetail({
 
   const handleRewrite = async (chapterNum: number) => {
     const brief = window.prompt(
-      data?.book.language === "en"
+      data?.book.language === "ru"
+        ? "Дополнительные указания для переписывания главы. Оставьте поле пустым, чтобы использовать текущий фокус."
+        : data?.book.language === "en"
         ? "Optional rewrite brief for this run only. Leave blank to use existing focus."
         : "可选：输入这次重写要遵循的补充想法。留空则沿用现有 focus。",
       "",
@@ -159,7 +161,9 @@ export function BookDetail({
 
   const handleRevise = async (chapterNum: number, mode: ReviseMode) => {
     const brief = window.prompt(
-      data?.book.language === "en"
+      data?.book.language === "ru"
+        ? "Дополнительные указания для редактирования главы. Оставьте поле пустым, чтобы использовать текущий фокус."
+        : data?.book.language === "en"
         ? "Optional revise brief for this run only. Leave blank to use existing focus."
         : "可选：输入这次修订要遵循的补充想法。留空则沿用现有 focus。",
       "",
@@ -182,7 +186,9 @@ export function BookDetail({
 
   const handleSync = async (chapterNum: number) => {
     const brief = window.prompt(
-      data?.book.language === "en"
+      data?.book.language === "ru"
+        ? "Дополнительные указания для синхронизации изменений. Оставьте поле пустым, чтобы синхронизировать по тексту главы."
+        : data?.book.language === "en"
         ? "Optional sync brief for interpreting the edited chapter body. Leave blank to sync directly from the text."
         : "可选：输入这次同步时要遵循的补充说明。留空则直接按正文同步。",
       "",
@@ -238,7 +244,9 @@ export function BookDetail({
 
   const handleReviseFoundation = async () => {
     const feedback = window.prompt(
-      data?.book.language === "en"
+      data?.book.language === "ru"
+        ? "Укажите, что изменить в основе произведения. Текст глав при этом не переписывается."
+        : data?.book.language === "en"
         ? "Foundation revision feedback. This rewrites the book foundation, not chapter body."
         : "输入重修基础设定的反馈。此操作会重写基础设定，不直接改正文。",
       "",
