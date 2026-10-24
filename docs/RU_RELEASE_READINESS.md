@@ -167,3 +167,10 @@
 - Подтверждено: GitHub API ранее возвращал 0 workflows и 0 runs при enabled=true; причина заключалась в необходимости активировать Actions на fork через PUT /actions/permissions.
 - После повторного включения зарегистрированы 2 workflows: CI (active) и Release. Release сразу принудительно переведён в `disabled_manually`, чтобы upstream публикация @actalk/* не запускалась в форке.
 - CI включён для безопасной ветки feat/russian-localization. Результаты матрицы Windows/Linux и Node 22/24 считать VERIFIED только после получения завершённых job-результатов.
+
+## Успешный GitHub CI — 2026-10-24
+
+- Run https://github.com/perejaslav/inkos-ru/actions/runs/40125428391 завершён `success`.
+- Все 5 jobs PASSED: build-and-test Ubuntu Node 22/24, Windows Node 22/24, verify-pack.
+- Workflow Release остаётся disabled_manually; публикация не выполнялась.
+- Остаточный существенный блокер: проверка реальной художественной генерации через LLM и качество русского текста.
