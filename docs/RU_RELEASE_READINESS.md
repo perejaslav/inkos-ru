@@ -11,11 +11,11 @@
 | pnpm build (Core/Studio/CLI) | PASS; ru-build-2.log |
 | pnpm -r typecheck | PASS; ru-final-type.log |
 | Автотесты Core | 734 / 734 PASS |
-| Автотесты Studio | 319 / 319 PASS |
+| Автотесты Studio | 320 / 320 PASS |
 | Автотесты CLI | 90 / 90 PASS |
-| Итого unit/integration | 1143 / 1143 PASS |
+| Итого unit/integration | 1144 / 1144 PASS |
 | Studio Playwright E2E Windows | 15 / 15 PASS |
-| GitHub CI Windows/Linux × Node 22/24 | 5 / 5 PASS; run 40127579529, SHA a68824ce |
+| GitHub CI Windows/Linux × Node 22/24 | PASS; run 40129847405, SHA 18959f54 |
 | Fork release safety | 4 / 4 PASS; release workflow disabled_manually |
 | Детерминированный русский сценарий трёх глав | PASS: сохранение/редактура/повторное чтение/канон/EPUB |
 | EPUB ru-RU и Unicode | PASS: проверен ZIP/OPF |
