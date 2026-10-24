@@ -236,17 +236,18 @@ export function NarrativeForecastPreview({ exec, onSelectBranch, onRecheck }: Na
       <div className="mx-3 mb-3 mt-1 rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-primary">
           <Check size={15} />
-          {tr("候选分支已保存", "Candidate branch saved")}
+          {tr("候选分支已保存", "Candidate branch saved", "Ветка-кандидат сохранена")}
         </div>
         <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
           {tr(
             `${details.branchId} 已写入候选计划；正文、大纲和正史状态没有修改。`,
             `${details.branchId} was written to the candidate plan; prose, outline, and canon were not modified.`,
+            `${details.branchId} сохранена в плане-кандидате; текст, план и канон не изменены.`,
           )}
         </p>
         {details.stale && (
           <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-            {tr("该推演基于旧正史，请核验后再继续写作。", "This forecast is stale; verify it before writing.")}
+            {tr("该推演基于旧正史，请核验后再继续写作。", "This forecast is stale; verify it before writing.", "Прогноз основан на устаревшем каноне. Проверьте его перед продолжением.")}
           </p>
         )}
       </div>

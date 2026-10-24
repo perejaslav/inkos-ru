@@ -118,6 +118,17 @@ describe("NarrativeForecastPreview", () => {
     expect(html).toContain("data-branch-id=\"branch-1\"");
   });
 
+  it("renders Russian forecast controls, risks and sections", () => {
+    const russianForecast = { ...forecast, language: "ru" as const };
+    const html = renderToStaticMarkup(React.createElement(NarrativeForecastPreview, {
+      exec: exec({ kind: "narrative_forecast_created", forecast: russianForecast }),
+      onSelectBranch: vi.fn(), onRecheck: vi.fn(),
+    }));
+    for (const label of ["Прогноз развития сюжета", "НЕ КАНОН", "После главы 3", "Веток: 2", "Гл. 4", "Последовательность", "Изменения персонажей", "Выбрать ветку", "Проверить"]) {
+      expect(html).toContain(label);
+    }
+    expect(html).not.toContain("Use this branch");
+  });
   it("disables selection when the forecast is stale", () => {
     const html = renderToStaticMarkup(React.createElement(NarrativeForecastPreview, {
       exec: exec({ kind: "narrative_forecast", stale: true, forecast: { ...forecast, status: "stale" } }, "get_narrative_forecast"),
