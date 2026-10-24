@@ -30,6 +30,16 @@ describe("buildStudioBookConfig", () => {
     expect(() => buildStudioBookConfig({ title: "Ёж и зима", genre: "fanfic", language: "unsupported" }, "2026-10-24T00:00:00.000Z")).toThrow();
   });
 
+  it("rejects invalid numeric creation parameters before starting a model", () => {
+    const base = { title: "Роман", genre: "fiction", language: "ru" };
+    for (const value of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, "2000", null]) {
+      expect(() => buildStudioBookConfig({ ...base, chapterWordCount: value as number }, "2026-10-24")).toThrow(/chapterWordCount/);
+    }
+    expect(() => buildStudioBookConfig({ ...base, targetChapters: 0 }, "2026-10-24")).toThrow(/targetChapters/);
+    expect(() => buildStudioBookConfig({ ...base, minChapterLength: 3000, maxChapterLength: 1000 }, "2026-10-24")).toThrow(/minChapterLength/);
+    expect(() => buildStudioBookConfig({ ...base, title: " " }, "2026-10-24")).toThrow(/title/);
+  });
+
   it("preserves supported platform selections from studio create requests", () => {
     const config = buildStudioBookConfig(
       {

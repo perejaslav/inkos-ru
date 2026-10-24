@@ -127,3 +127,10 @@
 - POST /api/v1/books/create теперь возвращает HTTP 400 на неверные значения до выполнения подготовки и использует проверенный bookConfig.language во всех инструментах/параметрах вместо raw body.language.
 - Для создания книги в actionPayload и параметры инструмента передаются нормализованные chapterWordCount и targetChapters, предотвращая расхождение с дефолтами русской книги.
 - Studio typecheck PASS; 14/14 целевых тестов PASS. Полный regression suite и живые LLM-вызовы после этой правки не выполнялись.
+
+## Числовые параметры создания книги — 2026-10-24
+
+- `buildStudioBookConfig` теперь отклоняет нецелые, отрицательные, нулевые, NaN, Infinity, строки и null в числовых полях; не допускает minChapterLength > maxChapterLength.
+- Проверяется непустое название и жанр; существующие дефолты для неуказанных полей, включая русский объём главы, сохраняются.
+- Studio typecheck PASS, целевые тесты 9/9 PASS, весь Studio suite 319/319 PASS.
+- Реальное создание книги на LLM и GitHub Actions CI остаются NOT VERIFIED.

@@ -33,8 +33,28 @@ export function normalizeStudioPlatform(platform?: string): Platform {
   return platform === undefined ? "other" : PlatformSchema.parse(platform);
 }
 
+function positiveInteger(value: unknown, field: string): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${field} must be a positive integer`);
+  }
+  return value;
+}
+
 export function buildStudioBookConfig(body: StudioCreateBookBody, now: string): StudioBookConfigDraft {
+  if (typeof body.title !== "string" || !body.title.trim()) {
+    throw new Error("Book title must be a nonempty string");
+  }
+  if (typeof body.genre !== "string" || !body.genre.trim()) {
+    throw new Error("Book genre must be a nonempty string");
+  }
   const language = normalizeContentLanguage(body.language ?? "zh");
+  const chapterWordCount = positiveInteger(body.chapterWordCount === undefined ? defaultChapterLength(language) : body.chapterWordCount, "chapterWordCount");
+  const targetChapters = positiveInteger(body.targetChapters === undefined ? 200 : body.targetChapters, "targetChapters");
+  const minChapterLength = body.minChapterLength === undefined ? undefined : positiveInteger(body.minChapterLength, "minChapterLength");
+  const maxChapterLength = body.maxChapterLength === undefined ? undefined : positiveInteger(body.maxChapterLength, "maxChapterLength");
+  if (minChapterLength !== undefined && maxChapterLength !== undefined && minChapterLength > maxChapterLength) {
+    throw new Error("minChapterLength cannot exceed maxChapterLength");
+  }
   return {
     id: body.title
       .toLowerCase()
@@ -45,10 +65,10 @@ export function buildStudioBookConfig(body: StudioCreateBookBody, now: string): 
     platform: normalizeStudioPlatform(body.platform),
     genre: body.genre,
     status: "outlining",
-    targetChapters: body.targetChapters ?? 200,
-    chapterWordCount: body.chapterWordCount ?? defaultChapterLength(language),
-    ...(body.minChapterLength!==undefined?{minChapterLength:body.minChapterLength}:{}),
-    ...(body.maxChapterLength!==undefined?{maxChapterLength:body.maxChapterLength}:{}),
+    targetChapters,
+    chapterWordCount,
+    ...(minChapterLength !== undefined ? { minChapterLength } : {}),
+    ...(maxChapterLength !== undefined ? { maxChapterLength } : {}),
     language,
     createdAt: now,
     updatedAt: now,
