@@ -154,3 +154,10 @@
 - Удалён дублирующий globalSetup-сборщик Core из playwright.config.ts: Core собирается один раз до старта Studio API и Vite через scripts/e2e-dev-server.mjs; ранее две сборки могли пересекаться и удалить dist во время импорта.
 - E2E создания русской книги `russian-book-create.spec.ts` 1/1 PASS после исправления. Полная матрица E2E в этом прогоне не запускалась.
 - Реальная LLM-генерация и GitHub Actions Windows/Linux CI ещё NOT VERIFIED.
+
+## Полный браузерный E2E + GitHub CI — 2026-10-24
+
+- Playwright полный набор Studio: 15/15 PASS после устранения конкурирующих Core rebuild. Скриншот `flow-after.png` перенесён в отдельную папку тестовых артефактов; рабочее дерево не загрязняется.
+- Общий pnpm test по предыдущему прогону: Core 734/734, Studio 319/319, CLI 90/90 PASS (1143/1143).
+- GitHub Actions: `gh api repos/perejaslav/inkos-ru/actions/workflows` = 0; `/actions/runs` = 0. При этом actions/permissions.enabled=true и `.github/workflows/ci.yml` + `release.yml` существуют на master; зафиксирован блокирующий фактор регистрации/активации workflow на стороне GitHub, успешную удалённую матрицу заявлять нельзя.
+- Реальный LLM-генератор и качество русского художественного текста всё ещё NOT VERIFIED. Публичный релиз не выполнялся.
