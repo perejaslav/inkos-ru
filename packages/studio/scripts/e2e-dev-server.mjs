@@ -1,9 +1,15 @@
-import { spawn } from "node:child_process";
+import { spawn, execSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // Cross-platform E2E server launcher; no POSIX shell syntax or local shell aliases.
 const studio = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+// Build core before Vite or API startup: Playwright globalSetup can overlap
+// webServer startup, leaving a transient window where package subpaths are absent.
+execSync("pnpm --filter @actalk/inkos-core build", {
+  cwd: resolve(studio, "../.."),
+  stdio: "inherit",
+});
 const env = {
   ...process.env,
   INKOS_STUDIO_PORT: "4581",
