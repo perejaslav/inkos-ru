@@ -269,7 +269,7 @@ export function BookDetail({
     </div>
   );
 
-  if (error) return <div className="text-destructive p-8 bg-destructive/5 rounded-xl border border-destructive/20">Error: {error}</div>;
+  if (error) return <div className="text-destructive p-8 bg-destructive/5 rounded-xl border border-destructive/20">{t("common.error")}: {error}</div>;
   if (!data) return null;
 
   const { book, chapters } = data;
@@ -301,8 +301,8 @@ export function BookDetail({
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="text-4xl font-serif font-medium">{book.title}</h1>
-            {book.language === "en" && (
-              <span className="px-1.5 py-0.5 rounded border border-primary/20 text-primary text-[10px] font-bold">EN</span>
+            {(book.language === "en" || book.language === "ru") && (
+              <span className="px-1.5 py-0.5 rounded border border-primary/20 text-primary text-[10px] font-bold">{book.language === "ru" ? "RU" : "EN"}</span>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground font-medium">
@@ -542,7 +542,7 @@ export function BookDetail({
                           if (mode) handleRevise(ch.number, mode);
                         }}
                         className="px-2 py-1.5 text-[11px] font-bold rounded-lg bg-secondary text-muted-foreground border border-border/50 outline-none hover:text-primary hover:bg-primary/10 transition-all disabled:opacity-50 cursor-pointer"
-                        title="Revise with AI"
+                        title={book.language === "ru" ? "Редактировать с помощью ИИ" : book.language === "zh" ? "使用 AI 修订" : "Revise with AI"}
                       >
                         <option value="" disabled>{revisingChapters.includes(ch.number) ? t("common.loading") : t("book.curate")}</option>
                         <option value="spot-fix">{t("book.spotFix")}</option>
