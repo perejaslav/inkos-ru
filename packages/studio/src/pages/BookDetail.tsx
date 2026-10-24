@@ -1,3 +1,4 @@
+import { bookActionFallback } from "../lib/book-action-fallback";
 import { fetchJson, useApi, postApi } from "../hooks/use-api";
 import { useEffect, useMemo, useState } from "react";
 import type { Theme } from "../hooks/use-theme";
@@ -50,9 +51,6 @@ interface BookData {
 type ReviseMode = "spot-fix" | "polish" | "rewrite" | "rework" | "anti-detect";
 type ExportFormat = "txt" | "md" | "epub";
 
-function bookActionFallback(language: string | undefined, en: string, ru: string, zh: string): string {
-  return language === "ru" ? ru : language === "zh" ? zh : en;
-}
 type BookStatus = "active" | "paused" | "outlining" | "completed" | "dropped";
 
 interface Nav {
