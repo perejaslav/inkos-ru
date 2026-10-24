@@ -4,11 +4,12 @@ import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vitest";
-import { createInitialWorkManifestWrite, commitAtomicFileSet } from "@actalk/inkos-core";
+import { createInitialWorkManifestWrite, commitAtomicFileSet, evictAgentCache } from "@actalk/inkos-core";
 import { createStudioServer } from "../api/server.js";
 
 it("runs a book-route session against a short Work with no long-form book.json", async () => {
   const root = await mkdtemp(join(tmpdir(), "inkos-short-session-"));
+  let sessionId: string | undefined;
   let calls = 0;
   const releases: Array<() => void> = [];
   const upstream = createServer(async (req, res) => {
@@ -33,6 +34,7 @@ it("runs a book-route session against a short Work with no long-form book.json",
     const sessionResponse = await app.request("/api/v1/sessions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookId: "short", workId: "short", sessionKind: "book", modelOverride: "fixture-model", serviceOverride: "custom:fixture" }) });
     expect(sessionResponse.status).toBe(200);
     const { session } = await sessionResponse.json();
+    sessionId = session.sessionId;
     const payload =  { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ instruction: "Say you are ready; do not create or edit anything.", activeBookId: "short", workId: "short", profileId: "short-fiction", sessionKind: "book", sessionId: session.sessionId, service: "custom:fixture", model: "fixture-model" }) };
     const run = app.request("/api/v1/agent", payload);
     await expect.poll(() => calls).toBe(1);

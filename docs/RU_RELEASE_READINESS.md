@@ -1,8 +1,16 @@
 # InkOS RU — результаты предрелизной проверки
 
-Дата: 2026-10-24. Ветка: feat/russian-localization. Локальная среда: Windows 11, Node 24, pnpm 9.15.9.
+Дата: 2026-10-25. Ветка: feat/russian-localization. Локальная среда: Windows 11, Node 24, pnpm 9.15.9.
 
 > Актуальная сводка: последние проверенные значения выше. Исторические записи ниже фиксируют состояние на момент отдельных проверок и могут содержать устаревшие NOT VERIFIED для уже закрытых пунктов.
+
+## Проверка 2026-10-25 (после d41495ab)
+
+- Полный локальный pnpm test: 1145/1145 PASS (Core 734, Studio 321, CLI 90).
+- pnpm -r typecheck: PASS (Core/Studio/CLI).
+- GitHub Actions run 40131996512, SHA d41495ab: FAIL только Windows/Node 22, Studio short-work-session.flow.test.ts; Windows EBUSY при удалении временного harness.sqlite. Другие 3 матричных задания PASS, verify-pack skipped.
+- Исправлен тестовый teardown: evictAgentCache(sessionId) перед удалением временной директории. Локальный целевой тест PASS; CI нового коммита требует подтверждения.
+- Локальные LLM endpoints 8081, 1234, 11434 недоступны. Реальная LLM-приёмка NOT VERIFIED.
 
 ## Подтверждено
 
@@ -11,9 +19,9 @@
 | pnpm build (Core/Studio/CLI) | PASS; ru-build-2.log |
 | pnpm -r typecheck | PASS; ru-final-type.log |
 | Автотесты Core | 734 / 734 PASS |
-| Автотесты Studio | 320 / 320 PASS |
+| Автотесты Studio | 321 / 321 PASS |
 | Автотесты CLI | 90 / 90 PASS |
-| Итого unit/integration | 1144 / 1144 PASS |
+| Итого unit/integration | 1145 / 1145 PASS |
 | Studio Playwright E2E Windows | 15 / 15 PASS |
 | GitHub CI Windows/Linux × Node 22/24 | PASS; run 40129847405, SHA 18959f54 |
 | Fork release safety | 4 / 4 PASS; release workflow disabled_manually |
