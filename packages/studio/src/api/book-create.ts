@@ -1,4 +1,4 @@
-import { PlatformSchema, defaultChapterLength, type Platform } from "@actalk/inkos-core";
+import { PlatformSchema, defaultChapterLength, normalizeContentLanguage, type Platform } from "@actalk/inkos-core";
 export { waitForStudioBookReady } from "../lib/book-ready.js";
 export type { StudioBookDetail, WaitForStudioBookReadyOptions } from "../lib/book-ready.js";
 
@@ -34,6 +34,8 @@ export function normalizeStudioPlatform(platform?: string): Platform {
 }
 
 export function buildStudioBookConfig(body: StudioCreateBookBody, now: string): StudioBookConfigDraft {
+  const language = normalizeContentLanguage(body.language ?? "zh");
+  if (language === "ru") throw new Error("Russian book creation is not yet supported by the full writing pipeline.");
   return {
     id: body.title
       .toLowerCase()
@@ -45,10 +47,10 @@ export function buildStudioBookConfig(body: StudioCreateBookBody, now: string): 
     genre: body.genre,
     status: "outlining",
     targetChapters: body.targetChapters ?? 200,
-    chapterWordCount: body.chapterWordCount ?? defaultChapterLength(body.language === "en" ? "en" : "zh"),
+    chapterWordCount: body.chapterWordCount ?? defaultChapterLength(language),
     ...(body.minChapterLength!==undefined?{minChapterLength:body.minChapterLength}:{}),
     ...(body.maxChapterLength!==undefined?{maxChapterLength:body.maxChapterLength}:{}),
-    language: body.language === "en" ? "en" : "zh",
+    language,
     createdAt: now,
     updatedAt: now,
   };

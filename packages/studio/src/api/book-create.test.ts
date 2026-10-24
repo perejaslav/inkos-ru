@@ -13,6 +13,14 @@ describe("normalizeStudioPlatform", () => {
 });
 
 describe("buildStudioBookConfig", () => {
+  it("rejects unsupported languages rather than silently creating a Chinese book", () => {
+    const base = { title: "Новый роман", genre: "fiction" };
+    expect(() => buildStudioBookConfig({ ...base, language: "ru" }, "2026-10-24T00:00:00.000Z"))
+      .toThrow(/not yet supported/);
+    expect(() => buildStudioBookConfig({ ...base, language: "de" }, "2026-10-24T00:00:00.000Z"))
+      .toThrow(/Unsupported content language/);
+  });
+
   it("preserves supported platform selections from studio create requests", () => {
     const config = buildStudioBookConfig(
       {

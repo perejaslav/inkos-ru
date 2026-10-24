@@ -1,3 +1,4 @@
+import { normalizeContentLanguage } from "@actalk/inkos-core";
 import { Command } from "commander";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -7,9 +8,11 @@ import { initializeProjectDirectory } from "../project-bootstrap.js";
 export const initCommand = new Command("init")
   .description("Initialize an InkOS project (current directory by default)")
   .argument("[name]", "Project name (creates subdirectory). Omit to init current directory.")
-  .option("--lang <language>", "Default writing language: zh (Chinese) or en (English)", "zh")
+  .option("--lang <language>", "Default writing language: zh, en or ru (ru writing pipeline is in development)", "zh")
   .action(async (name: string | undefined, opts: { lang?: string }) => {
     const projectDir = name ? resolve(process.cwd(), name) : process.cwd();
+    const requestedLanguage = normalizeContentLanguage(opts.lang ?? "zh");
+    if (requestedLanguage === "ru") throw new Error("Russian project initialization is not yet supported by the full writing pipeline.");
 
     try {
       await mkdir(projectDir, { recursive: true });
