@@ -1,3 +1,4 @@
+import { parseStudioProjectLanguage } from "./project-language.js";
 import { createHash } from "node:crypto";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -5527,7 +5528,12 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // --- Language setup ---
 
   app.post("/api/v1/project/language", async (c) => {
-    const { language } = await c.req.json<{ language: "zh" | "en" | "ru" }>();
+    let language: "zh" | "en" | "ru";
+    try {
+      language = parseStudioProjectLanguage(await c.req.json());
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : "Invalid language" }, 400);
+    }
     const configPath = join(root, "inkos.json");
     try {
       const raw = await readFile(configPath, "utf-8");
