@@ -186,3 +186,9 @@
 - Создан неразрушающий `scripts/check-fork-release-safety.mjs`: требует наличия CI и отсутствия `.github/workflows/release.yml`/`.yaml` в рабочей ветке. Интегрирован в build-and-test до установки зависимостей.
 - Локальная проверка `node scripts/check-fork-release-safety.mjs`: PASS. GitHub-side Release workflow в ветке master по-прежнему существует, но принудительно отключён (`disabled_manually`). Эта локальная проверка не заменяет контроль GitHub Actions и не защищает master сама по себе.
 - После нового push требуется подтверждение очередного CI; пакеты и release не публиковались.
+
+## Негативные тесты защиты релиза — 2026-10-24
+
+- Добавлены 4 независимых теста `scripts/check-fork-release-safety.test.mjs`: допускается CI-only ветка, блокируются release.yml и release.yaml, блокируется отсутствие CI. 4/4 PASS локально.
+- Включены в GitHub CI через `node --test`; локальный guard PASS. Новый CI run на SHA 1f1c40d0 в процессе на момент проверки, результат обновлённой матрицы пока не заявлен.
+- LLM 127.0.0.1:8081 по-прежнему недоступна. Публикация не выполнялась.
