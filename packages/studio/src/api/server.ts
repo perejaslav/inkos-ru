@@ -6088,21 +6088,22 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     }
 
     const now = new Date().toISOString();
-    const bookId = body.title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]/g, "-").replace(/-+/g, "-").slice(0, 30);
-
-    const bookConfig = {
-      id: bookId,
-      title: body.title,
-      platform: (body.platform ?? "other") as "other",
-      genre: (body.genre ?? "other") as "xuanhuan",
-      status: "outlining" as const,
-      targetChapters: body.targetChapters ?? 100,
-      chapterWordCount: body.chapterWordCount ?? 3000,
-      fanficMode: body.mode?.trim() || "canon",
-      ...(body.language ? { language: body.language as "zh" | "en" | "ru" } : {}),
-      createdAt: now,
-      updatedAt: now,
-    };
+    let draft: ReturnType<typeof buildStudioBookConfig>;
+    try {
+      draft = buildStudioBookConfig({
+        title: body.title,
+        genre: body.genre ?? "other",
+        platform: body.platform,
+        language: body.language,
+        targetChapters: body.targetChapters ?? 100,
+        chapterWordCount: body.chapterWordCount,
+      }, now);
+      if (!draft.id) return c.json({ error: "A valid nonempty book title is required" }, 400);
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 400);
+    }
+    const bookId = draft.id;
+    const bookConfig = { ...draft, fanficMode: body.mode?.trim() || "canon" };
 
     broadcast("fanfic:start", { bookId, title: body.title });
     try {

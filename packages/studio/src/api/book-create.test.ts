@@ -23,6 +23,13 @@ describe("buildStudioBookConfig", () => {
       .toThrow(/Unsupported content language/);
   });
 
+  it("derives nonempty IDs for Cyrillic fanfic titles and rejects unsupported languages", () => {
+    const config = buildStudioBookConfig({ title: "Ёж и зима", genre: "fanfic", language: "ru" }, "2026-10-24T00:00:00.000Z");
+    expect(config.id).toBe("ёж-и-зима");
+    expect(config.chapterWordCount).toBe(2000);
+    expect(() => buildStudioBookConfig({ title: "Ёж и зима", genre: "fanfic", language: "unsupported" }, "2026-10-24T00:00:00.000Z")).toThrow();
+  });
+
   it("preserves supported platform selections from studio create requests", () => {
     const config = buildStudioBookConfig(
       {
