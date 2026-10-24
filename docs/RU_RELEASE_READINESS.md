@@ -134,3 +134,10 @@
 - Проверяется непустое название и жанр; существующие дефолты для неуказанных полей, включая русский объём главы, сохраняются.
 - Studio typecheck PASS, целевые тесты 9/9 PASS, весь Studio suite 319/319 PASS.
 - Реальное создание книги на LLM и GitHub Actions CI остаются NOT VERIFIED.
+
+## Согласованность книги и WorkManifest — 2026-10-24
+
+- StateManager.saveBookConfig теперь синхронизирует title и language существующего WorkManifest после обновления книги, не пересоздавая manifest и не удаляя profileId/createdAt/артефакты.
+- Регрессионный тест: сохранение русской книги, смена языка и названия, повторное открытие StateManager, сравнение book.json с work.json — PASS.
+- Core typecheck PASS, весь Core suite 734/734 PASS.
+- Полная регрессия Studio/CLI и live LLM после изменения НЕ проверялись; CI удалённой матрицы NOT VERIFIED.

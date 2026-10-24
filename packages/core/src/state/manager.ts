@@ -389,7 +389,15 @@ export class StateManager {
   async saveBookConfig(bookId: string, config: BookConfig): Promise<void> {
     await this.saveBookConfigAt(this.bookDir(bookId), config);
     try {
-      await loadWorkManifest(this.projectRoot, bookId);
+      const manifest = await loadWorkManifest(this.projectRoot, bookId);
+      if (manifest.language !== config.language || manifest.title !== config.title) {
+        await saveWorkManifest(this.projectRoot, {
+          ...manifest,
+          title: config.title,
+          language: config.language,
+          updatedAt: config.updatedAt,
+        });
+      }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       await saveWorkManifest(this.projectRoot, createWorkManifest({
