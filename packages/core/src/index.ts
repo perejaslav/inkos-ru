@@ -1,3 +1,4 @@
+export { normalizeContentLanguage, normalizeUiLocale, ContentLanguageSchema, UiLocaleSchema, type ContentLanguage, type UiLocale } from "./utils/language-code.js";
 // Models
 export { type BookConfig, type Platform, type Genre, type BookStatus, type FanficMode, BookConfigSchema, PlatformSchema, GenreSchema, BookStatusSchema, FanficModeSchema } from "./models/book.js";
 export { type ChapterMeta, ChapterMetaSchema } from "./models/chapter.js";

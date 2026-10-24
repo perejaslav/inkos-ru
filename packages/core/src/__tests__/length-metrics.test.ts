@@ -10,6 +10,19 @@ describe("length metrics", () => {
     expect(countChapterLength("他抬头看天。", "zh_chars")).toBe(6);
   });
 
+  it("counts Russian Cyrillic words and ignores Markdown metadata", () => {
+    const prose = "---\ntitle: Пролог\n---\n# Глава первая\n\nМальчик медленно открыл дверь.";
+    expect(countChapterLength(prose, "ru_words")).toBe(4);
+    expect(countChapterLength("Ёж и ёжик. По-русски — 50-летний герой.", "ru_words")).toBeGreaterThan(4);
+    expect(countChapterLength("Санкт-Петербург и New York", "ru_words")).toBeGreaterThan(0);
+  });
+
+  it("resolves Russian word counting without changing zh/en", () => {
+    expect(defaultChapterLength("ru")).toBe(2000);
+    expect(buildLengthSpec(2300, "ru")).toEqual({ target: 2300, countingMode: "ru_words" });
+    expect(countChapterLength("Мальчик медленно открыл дверь.", "en_words")).toBe(0);
+  });
+
   it("counts English chapter length using en_words", () => {
     expect(countChapterLength("He looked at the sky.", "en_words")).toBe(5);
   });
