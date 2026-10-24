@@ -49,6 +49,10 @@ interface BookData {
 
 type ReviseMode = "spot-fix" | "polish" | "rewrite" | "rework" | "anti-detect";
 type ExportFormat = "txt" | "md" | "epub";
+
+function bookActionFallback(language: string | undefined, en: string, ru: string, zh: string): string {
+  return language === "ru" ? ru : language === "zh" ? zh : en;
+}
 type BookStatus = "active" | "paused" | "outlining" | "completed" | "dropped";
 
 interface Nav {
@@ -113,7 +117,7 @@ export function BookDetail({
       await postApi(`/books/${bookId}/write-next`);
     } catch (e) {
       setWriteRequestPending(false);
-      alert(e instanceof Error ? e.message : "Failed");
+      alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Failed", "Не удалось начать запись", "写作启动失败"));
     }
   };
 
@@ -128,7 +132,7 @@ export function BookDetail({
       }
       nav.toDashboard();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Delete failed");
+      alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Delete failed", "Не удалось удалить книгу", "删除书籍失败"));
     } finally {
       setDeleting(false);
     }
@@ -153,7 +157,7 @@ export function BookDetail({
       });
       refetch();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Rewrite failed");
+      alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Rewrite failed", "Не удалось переписать главу", "重写章节失败"));
     } finally {
       setRewritingChapters((prev) => prev.filter((n) => n !== chapterNum));
     }
@@ -178,7 +182,7 @@ export function BookDetail({
       });
       refetch();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Revision failed");
+      alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Revision failed", "Не удалось отредактировать главу", "修订章节失败"));
     } finally {
       setRevisingChapters((prev) => prev.filter((n) => n !== chapterNum));
     }
@@ -203,7 +207,7 @@ export function BookDetail({
       });
       refetch();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Sync failed");
+      alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Sync failed", "Не удалось синхронизировать главу", "同步章节失败"));
     } finally {
       setSyncingChapters((prev) => prev.filter((n) => n !== chapterNum));
     }
@@ -224,7 +228,7 @@ export function BookDetail({
       });
       refetch();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Save failed");
+      alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Save failed", "Не удалось сохранить настройки", "保存设置失败"));
     } finally {
       setSavingSettings(false);
     }
@@ -236,7 +240,7 @@ export function BookDetail({
       alert(await action());
       refetch();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Action failed");
+      alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Action failed", "Не удалось выполнить действие", "操作失败"));
     } finally {
       setBookActionPending(null);
     }
@@ -404,7 +408,7 @@ export function BookDetail({
                   });
                   alert(`${t("common.exportSuccess")}\n${data.path}\n(${data.chapters} ${t("dash.chapters")})`);
                 } catch (e) {
-                  alert(e instanceof Error ? e.message : "Export failed");
+                  alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Export failed", "Не удалось экспортировать книгу", "导出书籍失败"));
                 }
               }}
               className="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-secondary/50 text-muted-foreground rounded-lg hover:text-foreground hover:bg-secondary transition-all border border-border/50"
@@ -506,7 +510,7 @@ export function BookDetail({
                             alert(`${review.summary ?? t("book.review")}\n${review.observations?.length ?? 0} ${t("book.observations")}`);
                             refetch();
                           } catch (e) {
-                            alert(e instanceof Error ? e.message : "Review failed");
+                            alert(e instanceof Error ? e.message : bookActionFallback(data?.book.language, "Review failed", "Не удалось проверить главу", "审查章节失败"));
                           }
                         }}
                         className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all shadow-sm"
