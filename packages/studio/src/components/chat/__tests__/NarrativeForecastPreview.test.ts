@@ -139,5 +139,9 @@ describe("NarrativeForecastPreview", () => {
       .toContain("branch-2");
     expect(buildNarrativeForecastRecheckInstruction(forecast.forecastId, "en"))
       .toBe(`Call get_narrative_forecast for forecast ${forecast.forecastId} and report whether it is stale.`);
+    expect(buildNarrativeForecastSelectionInstruction(forecast.forecastId, "branch-2", "ru"))
+      .toContain("Вызови select_narrative_branch");
+    expect(buildNarrativeForecastRecheckInstruction(forecast.forecastId, "ru"))
+      .toContain("Вызови get_narrative_forecast");
   });
 });

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { BookConfigSchema } from "../models/book.js";
 import { ProjectConfigSchema } from "../models/project.js";
 import { RuntimeStateLanguageSchema } from "../models/runtime-state.js";
+import { readChapterHeading, splitChapters } from "../utils/chapter-splitter.js";
+import { deriveBookIdFromTitle } from "../utils/book-id.js";
 import { chapterDocumentHeading, renderChapterDocument, chapterDocumentBody } from "../utils/chapter-document.js";
 
 describe("Russian content contracts", () => {
@@ -22,6 +24,12 @@ describe("Russian content contracts", () => {
   it("accepts the project-language field for Russian", () => {
     expect(ProjectConfigSchema.shape.language.parse("ru")).toBe("ru");
     expect(ProjectConfigSchema.shape.language.parse(undefined)).toBe("zh");
+  });
+
+  it("reads Russian headings and safely derives Cyrillic work identifiers", () => {
+    expect(readChapterHeading("# Глава 2. Первый снег")).toEqual({ number: 2, title: "Первый снег", language: "ru" });
+    expect(splitChapters("# Глава 1. Начало\nТихий день.\n# Глава 2. Финал\nСнег выпал.")).toHaveLength(2);
+    expect(deriveBookIdFromTitle("Зимний город")).toBe("зимний-город");
   });
 
   it("wraps Russian prose with a Russian chapter heading", () => {

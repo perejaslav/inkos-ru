@@ -13,10 +13,12 @@ describe("normalizeStudioPlatform", () => {
 });
 
 describe("buildStudioBookConfig", () => {
-  it("rejects unsupported languages rather than silently creating a Chinese book", () => {
+  it("accepts Russian while rejecting unsupported languages", () => {
     const base = { title: "Новый роман", genre: "fiction" };
-    expect(() => buildStudioBookConfig({ ...base, language: "ru" }, "2026-10-24T00:00:00.000Z"))
-      .toThrow(/not yet supported/);
+    const russian = buildStudioBookConfig({ ...base, language: "ru" }, "2026-10-24T00:00:00.000Z");
+    expect(russian.language).toBe("ru");
+    expect(russian.id).toBe("новый-роман");
+    expect(russian.chapterWordCount).toBe(2000);
     expect(() => buildStudioBookConfig({ ...base, language: "de" }, "2026-10-24T00:00:00.000Z"))
       .toThrow(/Unsupported content language/);
   });

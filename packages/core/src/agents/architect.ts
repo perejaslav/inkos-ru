@@ -51,21 +51,27 @@ export class ArchitectAgent extends BaseAgent {
     const resolvedLanguage = book.language;
 
     const contextBlock = externalContext
-      ? `\n\n## 外部指令\n以下是来自外部系统的创作指令，请将其融入设定中：\n\n${externalContext}\n`
+      ? resolvedLanguage === "ru"
+        ? `\n\n## Указания автора\nУчти эти требования при подготовке исходных материалов:\n\n${externalContext}\n`
+        : resolvedLanguage === "en"
+        ? `\n\n## External instruction\nIncorporate this direction into the foundation:\n\n${externalContext}\n`
+        : `\n\n## 外部指令\n以下是来自外部系统的创作指令，请将其融入设定中：\n\n${externalContext}\n`
       : "";
     const reviewFeedbackBlock = this.buildReviewFeedbackBlock(reviewFeedback, resolvedLanguage);
     const revisePrompt = options?.reviseFrom
-      ? this.buildRevisePrompt(options.reviseFrom)
+      ? this.buildRevisePrompt(options.reviseFrom, resolvedLanguage)
       : "";
 
-    const systemPrompt = resolvedLanguage === "en"
-      ? this.buildEnglishFoundationPrompt(book, contextBlock, reviewFeedbackBlock)
-      : this.buildChineseFoundationPrompt(book, contextBlock, reviewFeedbackBlock);
+    const systemPrompt = this.buildFoundationProtocol({ book, contextBlock, reviewFeedbackBlock, language: resolvedLanguage });
 
-    const langPrefix = resolvedLanguage === "en"
+    const langPrefix = resolvedLanguage === "ru"
+      ? "【ЯЗЫК】Все исходные материалы, имена персонажей, названия мест, правила и описания создавай по-русски.\n\n"
+      : resolvedLanguage === "en"
       ? "【LANGUAGE OVERRIDE】All submitted foundation content, character names, place names, and prose must be in English.\n\n"
       : "";
-    const userMessage = resolvedLanguage === "en"
+    const userMessage = resolvedLanguage === "ru"
+      ? `Подготовь все исходные материалы произведения «${book.title}» в жанре ${book.genre} на русском языке.`
+      : resolvedLanguage === "en"
       ? `Generate the complete foundation for the ${book.genre} Work titled "${book.title}". Write everything in English.`
       : `请为标题为"${book.title}"的${book.genre}作品生成完整基础设定。`;
 
@@ -84,7 +90,25 @@ export class ArchitectAgent extends BaseAgent {
     bookRules: string;
     roles: string;
     userFeedback: string;
-  }): string {
+  }, language: "zh" | "en" | "ru"): string {
+    if (language !== "zh") {
+      return `\n\n## Revision of existing foundation
+Use the activated Skills, authoritative material below and the user's feedback. Produce the current five-part foundation. ${language === "ru" ? "Write all creative content in Russian." : ""}
+
+<story_frame>
+${reviseFrom.storyFrame}
+</story_frame>
+<volume_map>
+${reviseFrom.volumeMap}
+</volume_map>
+<book_rules>
+${reviseFrom.bookRules}
+</book_rules>
+<roles>
+${reviseFrom.roles}
+</roles>
+User feedback: ${reviseFrom.userFeedback || "(none)"}\n`;
+    }
     return `\n\n## 既有架构稿修订
 按已激活 Skill 使用以下权威原稿和用户要求，返回当前五块 foundation 协议。
 
@@ -132,10 +156,14 @@ ${reviseFrom.userFeedback || "（无）"}
     readonly language: "zh" | "en" | "ru";
   }): string {
     const { book, contextBlock, reviewFeedbackBlock, language } = params;
-    const metadata = language === "en"
+    const metadata = language === "ru"
+      ? `Площадка: ${book.platform}\nЖанр: ${book.genre}\nВсего глав: ${book.targetChapters}\nОбъём главы (слов): ${book.chapterWordCount}\nНазвание: ${book.title}`
+      : language === "en"
       ? `Platform: ${book.platform}\nGenre: ${book.genre}\nTarget chapters: ${book.targetChapters}\nChapter length: ${book.chapterWordCount}\nTitle: ${book.title}`
       : `平台：${book.platform}\n题材：${book.genre}\n目标章数：${book.targetChapters}\n每章字数：${book.chapterWordCount}\n标题：${book.title}`;
-    return language === "en"
+    return language === "ru"
+      ? `Подготовь исходные материалы произведения по-русски, используя активированные профессиональные Skills и переданные требования.${contextBlock}${reviewFeedbackBlock}\n\n## Сведения о произведении\n${metadata}\n\nПередай понятные документы основы сюжета и структурированные правила через требуемые инструменты.`
+      : language === "en"
       ? `Create the Work foundation using the activated professional Skills and supplied authority.${contextBlock}${reviewFeedbackBlock}\n\n## Work metadata\n${metadata}\n\nSubmit readable foundation artifacts and the small structured rules surface through the required tools.`
       : `按已激活的专业 Skill 和输入权威生成作品基础设定。${contextBlock}${reviewFeedbackBlock}\n\n## 作品元信息\n${metadata}\n\n通过指定工具提交可读基础资产和少量结构化规则。`;
   }
@@ -273,8 +301,8 @@ ${reviseFrom.userFeedback || "（无）"}
       ],
       {
         name: "submit_foundation_outline",
-        label: input.language === "en" ? "Submit foundation outline" : "提交基础框架",
-        description: input.language === "en"
+        label: input.language === "ru" ? "Передать основу сюжета" : input.language === "en" ? "Submit foundation outline" : "提交基础框架",
+        description: input.language !== "zh"
           ? "Submit the readable story frame and volume map."
           : "提交可读的故事框架与卷纲。",
         parameters: FoundationOutlineToolSchema,
@@ -285,7 +313,7 @@ ${reviseFrom.userFeedback || "（无）"}
       storyFrame: outline.storyFrame.trim(),
       volumeMap: outline.volumeMap.trim(),
     });
-    const detailsPrompt = input.language === "en"
+    const detailsPrompt = input.language !== "zh"
       ? `${input.userMessage}\n\n<story_frame>\n${outline.storyFrame}\n</story_frame>\n\n<volume_map>\n${outline.volumeMap}\n</volume_map>\n\nComplete the readable book rules, structured rule data, and initial unresolved hooks.`
       : `${input.userMessage}\n\n<story_frame>\n${outline.storyFrame}\n</story_frame>\n\n<volume_map>\n${outline.volumeMap}\n</volume_map>\n\n继续完成可读本书规则、结构化规则数据和初始未解伏笔。`;
     const { result: details } = await this.submitStructured(
@@ -295,8 +323,8 @@ ${reviseFrom.userFeedback || "（无）"}
       ],
       {
         name: "submit_foundation_details",
-        label: input.language === "en" ? "Submit foundation details" : "提交基础详情",
-        description: input.language === "en"
+        label: input.language === "ru" ? "Передать подробности" : input.language === "en" ? "Submit foundation details" : "提交基础详情",
+        description: input.language !== "zh"
           ? "Submit book rules and initial unresolved hooks. Arrays and objects must be native tool arguments, never JSON strings."
           : "提交本书规则与初始未解伏笔。数组和对象必须是工具参数的原生类型，不要放入字符串。",
         parameters: FoundationDetailsToolSchema,
@@ -317,14 +345,18 @@ ${reviseFrom.userFeedback || "（无）"}
 
     const castContext=`${input.userMessage}\n\n${outline.storyFrame}\n\n${outline.volumeMap}\n\n${details.bookRules}`;
     const {result:cast} = await this.submitStructured([
-      {role:"system",content:input.language==="en"
+      {role:"system",content:input.language==="ru"
+        ? "Перечисли по-русски именованных персонажей, влияющих на исходный конфликт. Для каждого укажи только имя и важность major/minor. Не придумывай биографии безымянным группам."
+        : input.language==="en"
         ? "List the named people who shape the opening conflict. Submit only their names and major/minor roles. Do not expand unnamed occupational groups into invented biographies."
         : "列出影响开篇冲突的具名人物，只提交姓名和主要/次要角色级别，不把无名岗位群体扩写成虚构人物。"},
       {role:"user",content:castContext},
     ],{name:"submit_foundation_cast_index",label:"Identify opening cast",description:"Submit the names and tiers of the opening cast.",parameters:FoundationCastIndexToolSchema},
     {temperature:input.temperature,maxTokens:Math.min(2048,this.ctx.client.defaults.maxTokens)});
     const {result:cards} = await this.submitStructured([
-      {role:"system",content:input.language==="en"
+      {role:"system",content:input.language==="ru"
+        ? "Создай на русском языке краткие карточки именованных персонажей. Для каждого опиши нынешний мотив, знания, отношения и ограничения примерно в 80–120 словах. Опирайся на заданный сюжет, избегай пересказов и придуманных биографий."
+        : input.language==="en"
         ? "Create concise character cards for the named people who shape the opening conflict. Ground each card in the supplied story. Give present motive, knowledge, relationship pressure and limits in about 80–120 words; avoid repeating the plot or expanding unnamed occupational groups into full biographies."
         : "为影响开篇冲突的具名人物写简明角色卡。每人约150—250字，写清当下动机、已知信息、关系压力与能力边界，依据已给定故事，不重复整篇情节，不把无名岗位群体扩写成完整传记。"},
       {role:"user",content:castContext},
@@ -349,6 +381,12 @@ ${reviseFrom.userFeedback || "（无）"}
     const trimmed = reviewFeedback?.trim();
     if (!trimmed) return "";
 
+    if (language === "ru") {
+      return `\n\n## Замечания предыдущей проверки
+Исправь исходные материалы по следующим требованиям, а не ограничивайся перефразированием:
+
+${trimmed}\n`;
+    }
     if (language === "en") {
       return `\n\n## Previous Review Feedback
 Apply the following requested changes to the foundation instead of paraphrasing the same design:

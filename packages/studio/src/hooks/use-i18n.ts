@@ -1,6 +1,9 @@
 import { useApi } from "./use-api";
+import { useSyncExternalStore } from "react";
+import { getPreferredUiLanguage, resolveUiLanguage, subscribeUiLanguage } from "../lib/app-language";
+import { ruStrings } from "./ru-strings";
 
-type Lang = "zh" | "en";
+type Lang = "zh" | "en" | "ru";
 
 const strings = {
   // Header
@@ -303,6 +306,8 @@ const strings = {
   "settings.chatUiHint": { zh: "控制对话页里操作详情的展示方式。该偏好保存在当前浏览器，不写入项目配置。", en: "Controls how operation details render on the chat page. Stored in this browser, not in project config." },
   "settings.toolDetailsDefaultOpen": { zh: "操作详情默认展开", en: "Expand operation details by default" },
   "settings.toolDetailsDefaultOpenHint": { zh: "关闭后，对话中的「查看操作结果」默认收起，仍可手动展开。", en: "When off, \"view result\" blocks in chat start collapsed; you can still expand them manually." },
+  "settings.interfaceLanguage": { zh: "界面语言", en: "Interface Language" },
+  "settings.interfaceLanguageHint": { zh: "仅更改此浏览器中的 Studio 显示语言，不修改作品或项目写作语言。", en: "Changes Studio's display language in this browser only, without changing project or book writing language." },
 
   // Truth Files extras
   "truth.title": { zh: "真相文件", en: "Truth Files" },
@@ -374,10 +379,11 @@ export type TFunction = (key: StringKey) => string;
 
 export function useI18n() {
   const { data } = useApi<{ language: string }>("/project");
-  const lang: Lang = data?.language === "en" ? "en" : "zh";
+  const preferred = useSyncExternalStore(subscribeUiLanguage, getPreferredUiLanguage, () => null);
+  const lang: Lang = resolveUiLanguage(preferred, data?.language);
 
   function t(key: StringKey): string {
-    return strings[key][lang];
+    return lang === "ru" ? ruStrings[key] : strings[key][lang];
   }
 
   return { t, lang };

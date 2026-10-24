@@ -57,12 +57,13 @@ export class ScriptCreationAgent extends BaseAgent {
     const response = await this.chat([
       {
         role: "system",
-        content: language === "en"
+        content: language !== "zh"
           ? [
               "You recover one canonical production document after a transport-confirmed output-limit continuation.",
               "The fragments may contain scratch analysis, overlapping suffixes, and complete-document restarts.",
               "Return exactly one complete Markdown deliverable. Preserve the user's requirements and the most developed usable content; remove process notes, scratch analysis, wrappers, duplicate document roots, and repeated sections.",
               "Do not summarize or shorten the actual deliverable.",
+              ...(language === "ru" ? ["Return the document in Russian. Preserve headings explicitly required by the task."] : []),
             ].join("\n")
           : [
               "你负责在模型因输出上限续写后，恢复唯一一份规范生产文档。",
@@ -74,10 +75,10 @@ export class ScriptCreationAgent extends BaseAgent {
       {
         role: "user",
         content: [
-          language === "en" ? "## Required Headings" : "## 必需标题",
+          language !== "zh" ? "## Required Headings" : "## 必需标题",
           ...requiredHeadings.map((heading) => `- ${heading}`),
           "",
-          language === "en" ? "## Output Fragments" : "## 输出片段",
+          language !== "zh" ? "## Output Fragments" : "## 输出片段",
           fragments,
         ].join("\n"),
       },
@@ -104,7 +105,7 @@ export class ScriptCreationAgent extends BaseAgent {
       recoverAfterContinuation: (fragments) => this.recoverProductionMarkdown(
         fragments,
         language,
-        language === "en" ? ["## Characters", "## Script"] : ["## 人物", "## 剧本正文"],
+        language === "ru" ? ["## Персонажи", "## Сценарий"] : language === "en" ? ["## Characters", "## Script"] : ["## 人物", "## 剧本正文"],
       ),
     });
     return response.content.trim();
@@ -169,7 +170,7 @@ export class InteractiveFilmCreationAgent extends BaseAgent {
 }
 
 function productionBrief(input: {authorRequest?: string; requirements?: string}, language: "zh" | "en" | "ru") {
-  const en = language === "en";
+  const en = language !== "zh";
   return [
     ...(input.authorRequest?.trim() ? [en ? "## Author request" : "## 作者原始请求", input.authorRequest, ""] : []),
     en ? "## Production brief" : "## 创作任务与方案",
@@ -180,7 +181,7 @@ function productionBrief(input: {authorRequest?: string; requirements?: string},
 }
 
 export function renderScriptSpec(input: ScriptCreationInput): string {
-  if ((input.language ?? "zh") === "en") {
+  if ((input.language ?? "zh") !== "zh") {
     return [
       `# ${input.title} Script Creation Spec`,
       "",
@@ -219,7 +220,7 @@ export function renderScriptSpec(input: ScriptCreationInput): string {
 }
 
 export function renderStoryboardSpec(input: StoryboardCreationInput): string {
-  if ((input.language ?? "zh") === "en") {
+  if ((input.language ?? "zh") !== "zh") {
     return [
       `# ${input.title} Storyboard Creation Spec`,
       "",
@@ -256,7 +257,7 @@ export function renderStoryboardSpec(input: StoryboardCreationInput): string {
 }
 
 export function renderInteractiveFilmSpec(input: InteractiveFilmCreationInput): string {
-  if ((input.language ?? "zh") === "en") {
+  if ((input.language ?? "zh") !== "zh") {
     return [
       `# ${input.title} Interactive Film Creation Spec`,
       "",
@@ -306,6 +307,9 @@ export function renderInteractiveFilmSpec(input: InteractiveFilmCreationInput): 
 
 
 function buildScriptCreationSystemPrompt(language: "zh" | "en" | "ru" = "zh"): string {
+  if (language === "ru") {
+    return "Создай полный пригодный к постановке сценарий по-русски, используя активированный Skill. В результате должны быть заголовки Markdown «## Персонажи» и «## Сценарий». Передай готовый текст без предисловий, объяснений процесса или пересказа плана.";
+  }
   if (language === "en") {
     return [
       "Produce the confirmed script artifact with the activated script-writing Skill.",
@@ -321,6 +325,12 @@ function buildScriptCreationSystemPrompt(language: "zh" | "en" | "ru" = "zh"): s
 }
 
 function buildScriptCreationUserPrompt(input: ScriptCreationInput, language: "zh" | "en" | "ru" = "zh"): string {
+  if (language === "ru") {
+    return buildScriptCreationUserPrompt({ ...input, language: "ru" }, "en")
+      .replace("## Characters", "## Персонажи")
+      .replace("## Script", "## Сценарий")
+      + "\n\nWrite all characters' dialogue, descriptions and stage directions in Russian.";
+  }
   if (language === "en") {
     return [
       "## Creation Spec",
@@ -359,6 +369,7 @@ function buildScriptCreationUserPrompt(input: ScriptCreationInput, language: "zh
 }
 
 function buildStoryboardCreationSystemPrompt(language: "zh" | "en" | "ru" = "zh"): string {
+  if (language === "ru") return buildStoryboardCreationSystemPrompt("en") + " Write all shot descriptions in Russian.";
   if (language === "en") {
     return [
       "Execute the confirmed visual spec with the activated storyboard Skill; unconfirmed choices remain adjustable.",
@@ -372,6 +383,7 @@ function buildStoryboardCreationSystemPrompt(language: "zh" | "en" | "ru" = "zh"
 }
 
 function buildStoryboardCreationUserPrompt(input: StoryboardCreationInput, language: "zh" | "en" | "ru" = "zh"): string {
+  if (language === "ru") return buildStoryboardCreationUserPrompt(input, "en") + "\n\nWrite the storyboard and image prompts in Russian.";
   const maxShotsRule = input.maxShots
     ? (language === "en" ? `Do not exceed ${input.maxShots} shots.` : `镜头总数不得超过 ${input.maxShots}。`)
     : "";
@@ -413,6 +425,7 @@ function buildStoryboardCreationUserPrompt(input: StoryboardCreationInput, langu
 }
 
 function buildInteractiveFilmCreationSystemPrompt(language: "zh" | "en" | "ru" = "zh"): string {
+  if (language === "ru") return buildInteractiveFilmCreationSystemPrompt("en") + " Write all story text, scene directions, branches and labels in Russian.";
   if (language === "en") {
     return [
       "Execute the confirmed spec with the activated interactive-film Skill; unconfirmed choices remain adjustable.",
@@ -428,6 +441,7 @@ function buildInteractiveFilmCreationSystemPrompt(language: "zh" | "en" | "ru" =
 }
 
 function buildInteractiveFilmCreationUserPrompt(input: InteractiveFilmCreationInput, language: "zh" | "en" | "ru" = "zh"): string {
+  if (language === "ru") return buildInteractiveFilmCreationUserPrompt(input, "en") + "\n\nWrite all authored artifacts in Russian.";
   if (language === "en") {
     return [
       "## Interactive Film Spec",

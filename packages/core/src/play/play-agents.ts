@@ -237,7 +237,7 @@ export class PlayTurnAgent extends BaseAgent {
   async renderExisting(input: PlayTurnInput): Promise<PlaySceneRender> {
     const preserveChoices = input.currentSuggestedActions !== undefined;
     const { result } = await this.submitStructured([
-      { role: "system", content: "Rewrite the supplied scene while preserving every established action, fact, count, time, identity and outcome. This is the settled scene after the previous action, not a new player turn. Current state and original scene are authoritative. " + (preserveChoices ? "Return only narrative sceneText. Keep the supplied choices possible; their labels are separate interface elements, so do not append the choice list to sceneText." : "Return narrative sceneText and grounded suggestedActions as separate fields; do not append the choice list to sceneText.") + " Do not invent or change world facts." },
+      { role: "system", content: "Rewrite the supplied scene while preserving every established action, fact, count, time, identity and outcome. This is the settled scene after the previous action, not a new player turn. Current state and original scene are authoritative. " + (preserveChoices ? "Return only narrative sceneText. Keep the supplied choices possible; their labels are separate interface elements, so do not append the choice list to sceneText." : "Return narrative sceneText and grounded suggestedActions as separate fields; do not append the choice list to sceneText.") + " Do not invent or change world facts." + (input.language === "ru" ? " Write sceneText and suggestedActions in Russian." : "") },
       { role: "user", content: JSON.stringify({turn:input.turn,language:input.language??"zh",worldContract:input.worldPremise,
         settledContextAndScene:input.context,previousPlayerAction:input.input,rewriteRequest:input.replayContext,
         ...(preserveChoices?{unchangedSuggestedActions:input.currentSuggestedActions}:{})}) },
@@ -312,12 +312,13 @@ function hasMutationResult(mutation: PlayMutation): boolean {
 }
 
 function buildOpeningStateSystemPrompt(language: "zh" | "en" | "ru"): string {
-  return language === "en"
+  return language !== "zh"
     ? [
         "Extract the authoritative world state already established by the supplied opening scene and world contract.",
         "Do not rewrite the scene or add facts. Always create actor_player and the concrete people, places, objects, clues, and relationships needed to make the opening playable.",
         "Reuse stable readable ids. Physical holdings use an actor_player edge with value.role=holding; knowledge is observed rather than held.",
         "Submit only the opening mutation. The host owns eventId, turn, and actionKind.",
+        ...(language === "ru" ? ["Write all human-readable entity labels, summaries and notes in Russian."] : []),
       ].join("\n")
     : [
         "从给定开场正文和世界契约中提取已经成立的权威世界状态。",
@@ -329,7 +330,7 @@ function buildOpeningStateSystemPrompt(language: "zh" | "en" | "ru"): string {
 
 function buildOpeningStateUserPrompt(input: PlayOpeningStateInput, language: "zh" | "en" | "ru"): string {
   const premise = input.worldPremise?.trim();
-  return language === "en"
+  return language !== "zh"
     ? [
         `turn: ${input.turn}`,
         ...(premise ? ["World contract:", premise, ""] : []),
@@ -353,14 +354,14 @@ function buildOpeningStateUserPrompt(input: PlayOpeningStateInput, language: "zh
 }
 
 function buildTurnSystemPrompt(mode: "open" | "guided", language: "zh" | "en" | "ru"): string {
-  const choiceRule = language === "en"
+  const choiceRule = language !== "zh"
     ? mode === "open"
       ? "The open-world surface has no suggestedActions; submit an empty array."
       : "Use suggestedActions only for sparse, grounded choices at a genuine decision point."
     : mode === "open"
       ? "开放世界不提供 suggestedActions，必须提交空数组。"
       : "只在真实抉择点提供少量、基于当前场景的 suggestedActions。";
-  return language === "en"
+  return language !== "zh"
     ? [
         "Apply the activated play-world Skill and resolve one coherent interactive-fiction turn.",
         "In one submission, normalize the player's literal action, project the authoritative world mutation, and render the resulting scene. The prose and mutation must describe the same facts.",
@@ -370,6 +371,7 @@ function buildTurnSystemPrompt(mode: "open" | "guided", language: "zh" | "en" | 
         "Only evidence, clue, claim, and proof_chain entities may appear in evidenceTransitions. A tangible object that participates in an evidence lifecycle must use an evidentiary entity type rather than item.",
         "Record elapsed duration, resulting time anchor, rationale, and synchronized off-screen changes in timeAdvance. If the action cannot proceed, set blocked and render the grounded consequence.",
         choiceRule,
+        ...(language === "ru" ? ["Write the scene, suggested actions, action descriptions, entity labels, summaries and notes in Russian."] : []),
         "The host commits the whole submission atomically and owns event metadata.",
       ].join("\n")
     : [
@@ -387,7 +389,7 @@ function buildTurnSystemPrompt(mode: "open" | "guided", language: "zh" | "en" | 
 
 function buildTurnUserPrompt(input: PlayTurnInput, language: "zh" | "en" | "ru"): string {
   const premise = input.worldPremise?.trim();
-  return language === "en"
+  return language !== "zh"
     ? [
         `turn: ${input.turn}`,
         ...(premise ? ["World contract:", premise, ""] : []),

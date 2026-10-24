@@ -175,14 +175,14 @@ import {
 
 // -- Studio server language (read per request from the project config's `language`) --
 
-type StudioLanguage = "zh" | "en";
+type StudioLanguage = "zh" | "en" | "ru";
 
 function normalizeStudioLanguage(value: unknown): StudioLanguage {
-  return value === "en" ? "en" : "zh";
+  return value === "ru" ? "ru" : value === "en" ? "en" : "zh";
 }
 
 function pick(lang: StudioLanguage, zh: string, en: string): string {
-  return lang === "en" ? en : zh;
+  return lang === "zh" ? zh : en;
 }
 
 async function resolveStudioProfileSkills(
@@ -2931,7 +2931,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       createBook: {
         title: body.title,
         ...(body.genre ? { genre: body.genre } : {}),
-        ...(body.language === "en" || body.language === "zh" ? { language: body.language } : {}),
+        ...(body.language === "en" || body.language === "zh" || body.language === "ru" ? { language: body.language } : {}),
         ...(body.platform ? { platform: normalizeStudioPlatform(body.platform) } : {}),
         ...(body.chapterWordCount ? { chapterWordCount: body.chapterWordCount } : {}),
         ...(body.targetChapters ? { targetChapters: body.targetChapters } : {}),
@@ -2939,7 +2939,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     };
     const tool = createBookFoundationTool(pipeline, {
       actionPayload,
-      language: body.language === "en" ? "en" : "zh",
+      language: body.language === "ru" ? "ru" : body.language === "en" ? "en" : "zh",
       workerSkills: () => foundationSkills,
     });
     const binding = confirmedCapabilityBinding("create_book")!;
@@ -2952,7 +2952,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
         title: body.title,
         ...(body.genre ? { genre: body.genre } : {}),
         ...(body.platform ? { platform: normalizeStudioPlatform(body.platform) } : {}),
-        ...(body.language === "en" || body.language === "zh" ? { language: body.language } : {}),
+        ...(body.language === "en" || body.language === "zh" || body.language === "ru" ? { language: body.language } : {}),
         ...(body.targetChapters ? { targetChapters: body.targetChapters } : {}),
         ...(body.chapterWordCount ? { chapterWordCount: body.chapterWordCount } : {}),
       },
@@ -3088,7 +3088,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
         state.loadBookConfig(id),
         buildPipelineConfig({ bookIdForSettings: id }),
       ]);
-      const language = book.language === "en" ? "en" : "zh";
+      const language = book.language === "ru" ? "ru" : book.language === "en" ? "en" : "zh";
       const requestedBrief = typeof body.brief === "string" ? body.brief.trim() : "";
       const inspirationSkills = await hydrateActivatedSkillGuidance(
         await resolveStudioProfileSkills(root, "longform-novel", { includeRecommended: true }),
@@ -4122,7 +4122,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       if (updates.stream !== undefined) {
         existing.llm.stream = updates.stream;
       }
-      if (updates.language === "zh" || updates.language === "en") {
+      if (updates.language === "zh" || updates.language === "en" || updates.language === "ru") {
         existing.language = updates.language;
       }
       const { writeFile: writeFileFs } = await import("node:fs/promises");
@@ -4801,8 +4801,8 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
           else throw new ApiError(404, "BOOK_NOT_FOUND", `Book not found: ${agentBookId}`);
         }
       }
-      const configLanguage = config.language === "en" ? "en" : "zh";
-      const bookLanguage = activeBookConfig?.language === "en" ? "en" : activeBookConfig?.language === "zh" ? "zh" : undefined;
+      const configLanguage = config.language === "ru" ? "ru" : config.language === "en" ? "en" : "zh";
+      const bookLanguage = activeBookConfig?.language === "ru" ? "ru" : activeBookConfig?.language === "en" ? "en" : activeBookConfig?.language === "zh" ? "zh" : undefined;
       const requestedLanguage = actionPayload?.shortRun?.language ?? actionPayload?.createBook?.language;
       const surfaceLanguage = agentBookId
         ? (bookLanguage ?? configLanguage)
@@ -5527,7 +5527,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // --- Language setup ---
 
   app.post("/api/v1/project/language", async (c) => {
-    const { language } = await c.req.json<{ language: "zh" | "en" }>();
+    const { language } = await c.req.json<{ language: "zh" | "en" | "ru" }>();
     const configPath = join(root, "inkos.json");
     try {
       const raw = await readFile(configPath, "utf-8");
@@ -5817,7 +5817,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
         ...(updates.chapterWordCount !== undefined ? { chapterWordCount: Number(updates.chapterWordCount) } : {}),
         ...(updates.targetChapters !== undefined ? { targetChapters: Number(updates.targetChapters) } : {}),
         ...(updates.status !== undefined ? { status: updates.status as typeof book.status } : {}),
-        ...(updates.language !== undefined ? { language: updates.language as "zh" | "en" } : {}),
+        ...(updates.language !== undefined ? { language: updates.language as "zh" | "en" | "ru" } : {}),
         updatedAt: new Date().toISOString(),
       };
       await state.saveBookConfig(id, updated);
@@ -5915,7 +5915,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // --- Style Analyze ---
 
   app.post("/api/v1/style/analyze", async (c) => {
-    const { text, sourceName, language } = await c.req.json<{ text: string; sourceName: string; language?: "zh" | "en" }>();
+    const { text, sourceName, language } = await c.req.json<{ text: string; sourceName: string; language?: "zh" | "en" | "ru" }>();
     if (!text?.trim()) return c.json({ error: "text is required" }, 400);
 
     try {
@@ -5927,7 +5927,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
         projectRoot: root,
         referenceText: text,
         sourceName: sourceName ?? "unknown",
-        language: language ?? (config.language === "en" ? "en" : "zh"),
+        language: language ?? (config.language === "ru" ? "ru" : config.language === "en" ? "en" : "zh"),
       });
       return c.json({ guide });
     } catch (e) {
@@ -6091,7 +6091,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       targetChapters: body.targetChapters ?? 100,
       chapterWordCount: body.chapterWordCount ?? 3000,
       fanficMode: body.mode?.trim() || "canon",
-      ...(body.language ? { language: body.language as "zh" | "en" } : {}),
+      ...(body.language ? { language: body.language as "zh" | "en" | "ru" } : {}),
       createdAt: now,
       updatedAt: now,
     };
@@ -6157,7 +6157,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     } catch {
       return c.json({ error: `Parent book "${body.parentBookId}" not found` }, 404);
     }
-    const language = (body.language ?? parent.language) as "zh" | "en" | undefined;
+    const language = (body.language ?? parent.language) as "zh" | "en" | "ru" | undefined;
     const now = new Date().toISOString();
     const bookConfig = buildStudioBookConfig({
       title: body.title,
@@ -6229,7 +6229,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       platform: body.platform,
       targetChapters: body.targetChapters,
       chapterWordCount: body.chapterWordCount,
-      ...(body.language ? { language: body.language as "zh" | "en" } : {}),
+      ...(body.language ? { language: body.language as "zh" | "en" | "ru" } : {}),
     }, now);
     const bookId = bookConfig.id;
     if (!bookId) {

@@ -426,7 +426,9 @@ export class ComposerAgent extends BaseAgent {
     return this.submitSelectedSources([
       {
         role: "system",
-        content: request.language === "en"
+        content: request.language === "ru"
+          ? `Выбери ${semanticCandidateLabel(request.kind, "ru")}, необходимые для текущей главы.`
+          : request.language === "en"
           ? `Select the ${semanticCandidateLabel(request.kind, "en")} needed for the current chapter.`
           : `选择当前章节需要的${semanticCandidateLabel(request.kind, "zh")}。`,
       },
@@ -454,7 +456,9 @@ export class ComposerAgent extends BaseAgent {
     return this.submitSelectedSources([
       {
         role: "system",
-        content: request.language === "en"
+        content: request.language === "ru"
+          ? "Выбери разделы источников, привязанных к указаниям автора и полезных для задачи. Референсы задают ориентиры, но не устанавливают канон."
+          : request.language === "en"
           ? "Select user-bound reference sections useful for the current task. References are guidance, not canon."
           : "选择当前任务需要的用户绑定参考段落。参考资料不是正典。",
       },
@@ -510,6 +514,11 @@ function semanticCandidateLabel(
   kind: OutlineSectionSelectionRequest["kind"],
   language: "zh" | "en" | "ru",
 ): string {
+  if (language === "ru") {
+    if (kind === "role-card") return "карточки персонажей";
+    if (kind === "current-state") return "факты текущего состояния";
+    return "разделы плана";
+  }
   if (language === "en") {
     if (kind === "role-card") return "role cards";
     if (kind === "current-state") return "current-state facts";
@@ -860,8 +869,8 @@ async function buildReferencedHookEntries(
 
       const seedSummary = findHookSummary(summaries, hook.hookId, hook.startChapter, "seed");
       const latestSummary = findHookSummary(summaries, hook.hookId, hook.lastAdvancedChapter, "latest");
-      const role = language === "en" ? "memo-referenced hook" : "备忘引用伏笔";
-      const promise = hook.expectedPayoff || (language === "en" ? "(unspecified)" : "（未写明）");
+      const role = language === "ru" ? "сюжетная линия из плана главы" : language === "en" ? "memo-referenced hook" : "备忘引用伏笔";
+      const promise = hook.expectedPayoff || (language === "ru" ? "(не указана)" : language === "en" ? "(unspecified)" : "（未写明）");
       const seedBeat = seedSummary
         ? renderHookTraceBeat(seedSummary)
         : (hook.notes || promise);
@@ -871,10 +880,19 @@ async function buildReferencedHookEntries(
 
       return [{
         source: `runtime/referenced_hook#${hook.hookId}`,
-        reason: language === "en"
+        reason: language === "ru"
+          ? "История сюжетной линии, упомянутой в плане главы, со ссылками на источники."
+          : language === "en"
           ? "Traceable history for a hook referenced by the chapter memo."
           : "章节备忘引用伏笔的可追溯历史。",
-        excerpt: language === "en"
+        excerpt: language === "ru"
+          ? [
+              `${hook.hookId} (${hook.type}, ${role}, статус=${hook.status})`,
+              `Обещанная читателю развязка: ${promise}`,
+              `Первое упоминание (глава ${hook.startChapter}): ${seedBeat}`,
+              latestBeat ? `Последнее развитие (глава ${hook.lastAdvancedChapter}): ${latestBeat}` : undefined,
+            ].filter(Boolean).join(" | ")
+          : language === "en"
           ? [
               `${hook.hookId} (${hook.type}, ${role}, status=${hook.status})`,
               `reader promise: ${promise}`,

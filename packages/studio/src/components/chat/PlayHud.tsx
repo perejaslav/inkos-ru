@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Gamepad2, X, ChevronDown, ChevronLeft } from "lucide-react";
 import { fetchJson, buildApiUrl } from "../../hooks/use-api";
+import { getAppLanguage, tr } from "../../lib/app-language";
 import {
   HOLDING_TYPES, HOLDING_GLYPH, SLOT_GLYPH, EVIDENCE_LADDER,
   type HudDetail, type HudRow, type HoldingRow, type HoldingRelation, type HoldingLifecycle,
@@ -195,7 +196,7 @@ export function buildView(run: PlayRunResponse | null): HudView | null {
       .map((e) => {
         const other = e.fromId === id ? labelOf.get(e.toId) : labelOf.get(e.fromId);
         const strength = typeof e.strength === "number" ? ` ${e.strength}` : "";
-        return { label: "关系", text: `${e.type}${strength}${other ? ` · ${other}` : ""}` };
+        return { label: tr("关系", "Relation", "Связь"), text: `${e.type}${strength}${other ? ` · ${other}` : ""}` };
       });
 
   const locations: HudRow[] = entities
@@ -284,7 +285,7 @@ export function buildView(run: PlayRunResponse | null): HudView | null {
       return {
         id: slot.id, glyph: SLOT_GLYPH[slot.kind] ?? "•", label: slot.label, kind: slot.kind,
         value: text, ratio, note: null,
-        details: cause ? [{ label: "因为", text: cause }] : [],
+        details: cause ? [{ label: tr("因为", "Cause", "Причина"), text: cause }] : [],
       };
     });
   const latestTime = run.currentState?.timeAdvance
@@ -294,12 +295,12 @@ export function buildView(run: PlayRunResponse | null): HudView | null {
     ? {
         id: "world-time",
         glyph: "⏳",
-        label: "世界时间",
+        label: tr("世界时间", "World time", "Время в мире"),
         value: latestTime.anchor || latestTime.elapsed || "",
         note: latestTime.rationale || null,
         details: [
-          ...(latestTime.elapsed && latestTime.anchor ? [{ label: "经过", text: latestTime.elapsed }] : []),
-          ...(latestTime.synchronized ?? []).map((text) => ({ label: "同步", text })),
+          ...(latestTime.elapsed && latestTime.anchor ? [{ label: tr("经过", "Elapsed", "Прошло"), text: latestTime.elapsed }] : []),
+          ...(latestTime.synchronized ?? []).map((text) => ({ label: tr("同步", "Synchronized", "Согласовано"), text })),
         ],
       }
     : null;
@@ -399,7 +400,8 @@ export function PlayHud(props: {
     }
   }, [base, load]);
 
-  const view = useMemo(() => buildView(run), [run]);
+  const uiLang = getAppLanguage();
+  const view = useMemo(() => buildView(run), [run, uiLang]);
   const effectiveImageSettings = props.imageSettings ?? settings;
   // The selected holding is looked up fresh from the current view, so if it
   // disappears on the next turn the panel falls back to the list automatically.
@@ -415,7 +417,7 @@ export function PlayHud(props: {
       .forEach((request) => void generate(request.key, request.body));
   }, [coverReady, effectiveImageSettings, view, run?.sceneImageUrl, generate]);
 
-  const title = props.sessionTitle?.trim() || run?.title?.trim() || (isZh ? "互动世界" : "Play World");
+  const title = props.sessionTitle?.trim() || run?.title?.trim() || tr("互动世界", "Play World", "Игровой мир");
 
   // Collapsed: render nothing (the chat input row owns the prominent toggle).
   // Hooks above still run, so the run keeps polling and reporting the scene image.
@@ -429,7 +431,7 @@ export function PlayHud(props: {
         {view?.turn != null ? (
           <div className="flex shrink-0 flex-col items-center leading-none">
             <span className="text-[24px] leading-6 font-extrabold text-primary">{view.turn}</span>
-            <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60">{isZh ? "幕" : "Turn"}</span>
+            <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/60">{tr("幕", "Turn", "Ход")}</span>
           </div>
         ) : (
           <Gamepad2 size={16} className="shrink-0 text-primary" />
@@ -438,10 +440,10 @@ export function PlayHud(props: {
           <div className="truncate text-[16px] leading-6 font-bold text-foreground">{title}</div>
           <div className="mt-0.5 text-[14px] leading-5 text-muted-foreground">
             {view?.turn == null
-              ? (isZh ? "尚未开始" : "Not started")
+              ? tr("尚未开始", "Not started", "Ещё не начато")
               : view?.mode
-                ? (view.mode === "guided" ? (isZh ? "互动模式" : "Guided") : (isZh ? "开放模式" : "Open"))
-                : (isZh ? "互动世界" : "Play World")}
+                ? (view.mode === "guided" ? tr("互动模式", "Guided", "С подсказками") : tr("开放模式", "Open", "Свободный режим"))
+                : tr("互动世界", "Play World", "Игровой мир")}
           </div>
         </div>
         {view?.time?.value ? (
@@ -449,21 +451,23 @@ export function PlayHud(props: {
             {view.time.value}
           </span>
         ) : null}
-        <button type="button" onClick={() => { onClose(); setSelectedHoldingId(null); setSelectedFacingId(null); }} className="shrink-0 text-muted-foreground hover:text-foreground" title={isZh ? "收起" : "Collapse"}>
+        <button type="button" onClick={() => { onClose(); setSelectedHoldingId(null); setSelectedFacingId(null); }} className="shrink-0 text-muted-foreground hover:text-foreground" title={tr("收起", "Collapse", "Свернуть")}>
           <X size={15} />
         </button>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 text-[15px]">
-        {run?.sceneImageUrl ? <img src={buildApiUrl(run.sceneImageUrl) ?? undefined} alt={isZh ? "当前场景插画" : "Current scene illustration"} className="w-full rounded-lg" /> : null}
+        {run?.sceneImageUrl ? <img src={buildApiUrl(run.sceneImageUrl) ?? undefined} alt={tr("当前场景插画", "Current scene illustration", "Иллюстрация текущей сцены")} className="w-full rounded-lg" /> : null}
         {!view ? (
           <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border/50 bg-secondary/10 px-4 py-8 text-center">
             <span className="text-3xl opacity-80">🎲</span>
-            <p className="text-[16px] leading-6 font-semibold text-foreground">{isZh ? "这个世界还在沉睡" : "This world is still asleep"}</p>
+            <p className="text-[16px] leading-6 font-semibold text-foreground">{tr("这个世界还在沉睡", "This world is still asleep", "Этот мир ещё не проснулся")}</p>
             <p className="text-[14px] leading-6 text-muted-foreground">
-              {isZh
-                ? "在左边写下你的第一个动作，人物、线索、状态会在这里逐渐点亮。"
-                : "Take your first action on the left — characters, clues, and state will light up here."}
+              {tr(
+                "在左边写下你的第一个动作，人物、线索、状态会在这里逐渐点亮。",
+                "Take your first action on the left — characters, clues, and state will light up here.",
+                "Введите первое действие слева. Здесь появятся персонажи, предметы, подсказки и состояние мира.",
+              )}
             </p>
           </div>
         ) : selectedHolding ? (
@@ -483,7 +487,7 @@ export function PlayHud(props: {
           <>
             {view.time && (view.time.note || view.time.details.length > 0) ? (
               <Zone
-                title={isZh ? "世界时间" : "World time"}
+                title={tr("世界时间", "World time", "Время в мире")}
                 icon="⏳"
                 empty={false}
                 emptyText=""
@@ -492,10 +496,10 @@ export function PlayHud(props: {
               </Zone>
             ) : null}
             <Zone
-              title={isZh ? "我面对的" : "Around me"}
+              title={tr("我面对的", "Around me", "Вокруг меня")}
               icon="🧭"
               empty={view.facing.length === 0}
-              emptyText={isZh ? "周围还没有出现地点或人物" : "No places or people around yet"}
+              emptyText={tr("周围还没有出现地点或人物", "No places or people around yet", "Пока поблизости нет мест или персонажей")}
             >
               {view.facing.map((row) => (
                 <Row
@@ -509,10 +513,10 @@ export function PlayHud(props: {
             </Zone>
 
             <Zone
-              title={isZh ? "我握有的" : "What I hold"}
+              title={tr("我握有的", "What I hold", "Мои предметы")}
               icon="🎒"
               empty={view.holdings.length === 0}
-              emptyText={isZh ? "还没有获得物品、证据或线索" : "No items, evidence, or clues yet"}
+              emptyText={tr("还没有获得物品、证据或线索", "No items, evidence, or clues yet", "Пока нет предметов, улик или подсказок")}
             >
               {view.holdings.map((row) => (
                 <HoldingSlot
@@ -526,10 +530,10 @@ export function PlayHud(props: {
             </Zone>
 
             <Zone
-              title={isZh ? "状态" : "State"}
+              title={tr("状态", "State", "Состояние")}
               icon="📊"
               empty={view.meters.length === 0}
-              emptyText={isZh ? "还没有出现数值（压力、资源、关系、倒计时等）" : "No meters yet (pressure, resources, relations, timers…)"}
+              emptyText={tr("还没有出现数值（压力、资源、关系、倒计时等）", "No meters yet (pressure, resources, relations, timers…)", "Пока нет показателей давления, ресурсов, отношений или времени")}
             >
               {view.meters.map((row) => (
                 <StateGauge key={row.id} row={row} />
@@ -584,7 +588,7 @@ function HudRowInspect(props: {
   return (
     <div className="min-w-0 space-y-3">
       <button type="button" onClick={onBack} className="flex items-center gap-1 text-[14px] leading-6 text-muted-foreground hover:text-foreground">
-        <ChevronLeft size={14} /> {isZh ? "返回" : "Back"}
+        <ChevronLeft size={14} /> {tr("返回", "Back", "Назад")}
       </button>
 
       <div className="min-w-0 overflow-hidden rounded-xl border border-border/40 bg-secondary/30">
@@ -641,7 +645,7 @@ function Row({
     <div className="min-w-0 rounded-lg border border-border/30 bg-secondary/30">
       <div
         role={interactive ? "button" : undefined}
-        aria-label={interactive ? `${row.label} ${opensVisual ? (isZh ? "查看大图" : "view image") : open ? (isZh ? "收起详情" : "collapse details") : (isZh ? "展开详情" : "show details")}` : undefined}
+        aria-label={interactive ? `${row.label} ${opensVisual ? tr("查看大图", "view image", "открыть изображение") : open ? tr("收起详情", "collapse details", "свернуть сведения") : tr("展开详情", "show details", "показать сведения")}` : undefined}
         onClick={opensVisual ? onOpenVisual : expandable ? () => setOpen((o) => !o) : undefined}
         className={`px-2.5 py-2 ${interactive ? "cursor-pointer" : ""}`}
       >

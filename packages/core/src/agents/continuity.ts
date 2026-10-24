@@ -83,8 +83,8 @@ export class ContinuityAuditor extends BaseAgent {
       ],
       sources, {
         name: "submit_chapter_review",
-        label: isEnglish ? "Submit chapter review" : "提交章节审稿",
-        description: isEnglish
+        label: options.language === "ru" ? "Передать проверку главы" : isEnglish ? "Submit chapter review" : "提交章节审稿",
+        description: options.language !== "zh"
           ? "Submit evidence-backed observations only."
           : "只提交有证据的审稿观察。",
       },

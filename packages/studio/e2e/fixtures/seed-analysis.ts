@@ -7,10 +7,10 @@ export const E2E_ROOT = resolve(dir, "../../../..", "test-project");
 export const E2E_ANALYSIS_ID = "e2e-analysis-panel-demo";
 
 /**
- * Seeds a story graph that exercises the full AnalysisPanel:
+ * Seeds a story graph that exercises the current AnalysisPanel:
  *
- * - start node → 2 unconditional branches → 2 endings (≥2 runtime paths for emotion arc + path distribution)
- * - dialogue lines with known-lexicon emotion strings (坚定, 紧张, 喜悦, 绝望)
+ * - start node → 2 unconditional branches → 2 endings (2 executable paths for distribution)
+ * - dialogue lines retained for realistic story content; emotion arcs were removed in harness v2
  * - one GATED_UNREACHABLE node: "locked" is edge-reachable (a conditional choice targets it from start)
  *   but no runtime path ever reaches it because trust starts at 0 and is never written to ≥9
  *   → triggers validation-issue-GATED_UNREACHABLE

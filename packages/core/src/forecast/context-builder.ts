@@ -170,19 +170,22 @@ async function readIfExists(path: string): Promise<string | null> {
 
 export function renderForecastContextMarkdown(context: ForecastContext): string {
   const zh = context.language === "zh";
+  const ru = context.language === "ru";
   const sectionList: ReadonlyArray<readonly [string, string]> = [
-    [zh ? "作者意图" : "Author intent", context.sections.authorIntent],
-    [zh ? "当前聚焦" : "Current focus", context.sections.currentFocus],
-    [zh ? "当前状态" : "Current state", context.sections.currentState],
-    [zh ? "伏笔与钩子" : "Pending hooks", context.sections.pendingHooks],
-    [zh ? "故事框架" : "Story frame", context.sections.storyFrame],
-    [zh ? "卷映射" : "Volume map", context.sections.volumeMap],
-    [zh ? "近期章节摘要" : "Recent chapter summaries", context.sections.recentChapterSummaries],
-    [zh ? "人物与关系" : "Characters and relationships", context.sections.characterContext],
+    [ru ? "Авторский замысел" : zh ? "作者意图" : "Author intent", context.sections.authorIntent],
+    [ru ? "Текущая цель" : zh ? "当前聚焦" : "Current focus", context.sections.currentFocus],
+    [ru ? "Текущее состояние" : zh ? "当前状态" : "Current state", context.sections.currentState],
+    [ru ? "Незавершённые сюжетные линии" : zh ? "伏笔与钩子" : "Pending hooks", context.sections.pendingHooks],
+    [ru ? "Основа сюжета" : zh ? "故事框架" : "Story frame", context.sections.storyFrame],
+    [ru ? "План частей" : zh ? "卷映射" : "Volume map", context.sections.volumeMap],
+    [ru ? "Краткое содержание последних глав" : zh ? "近期章节摘要" : "Recent chapter summaries", context.sections.recentChapterSummaries],
+    [ru ? "Персонажи и отношения" : zh ? "人物与关系" : "Characters and relationships", context.sections.characterContext],
   ];
 
   const blocks = [
-    zh
+    ru
+      ? `# Установленный контекст произведения «${context.bookTitle}» (готовы главы по ${context.baseChapter})`
+      : zh
       ? `# 正史上下文（《${context.bookTitle}》，已完成至第 ${context.baseChapter} 章）`
       : `# Canonical context ("${context.bookTitle}", written through chapter ${context.baseChapter})`,
     ...sectionList

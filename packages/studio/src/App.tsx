@@ -29,8 +29,8 @@ import { useSSE } from "./hooks/use-sse";
 import { useSessionEvents } from "./hooks/use-session-events";
 import { useTheme } from "./hooks/use-theme";
 import { useI18n } from "./hooks/use-i18n";
-import { setAppLanguage, tr } from "./lib/app-language";
-import { postApi, putApi, useApi } from "./hooks/use-api";
+import { setAppLanguage, setPreferredUiLanguage, tr } from "./lib/app-language";
+import { postApi, useApi } from "./hooks/use-api";
 import { Sun, Moon } from "lucide-react";
 import { House } from "lucide-react";
 
@@ -77,6 +77,9 @@ export function App() {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
+  useEffect(() => {
+    document.documentElement.lang = currentLang === "zh" ? "zh-CN" : currentLang;
+  }, [currentLang]);
 
   useEffect(() => {
     if (project) {
@@ -133,21 +136,23 @@ export function App() {
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="max-w-md w-full rounded-2xl border border-destructive/30 bg-destructive/5 p-6 space-y-4">
           <div>
-            <h1 className="text-lg font-semibold text-destructive">无法加载项目配置 / Failed to load project config</h1>
+            <h1 className="text-lg font-semibold text-destructive">
+              {currentLang === "ru" ? "Не удалось загрузить настройки проекта" : "无法加载项目配置 / Failed to load project config"}
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground break-all">{projectError}</p>
           </div>
           {/* 项目配置没加载出来，语言未知，所以这屏中英双语并排展示。 */}
           <p className="text-sm text-muted-foreground">
-            请检查项目根目录下的 inkos.json 是否存在且为合法 JSON，然后重试。
-            <br />
-            Check that inkos.json in the project root exists and is valid JSON, then retry.
+            {currentLang === "ru"
+              ? "Проверьте, что inkos.json существует в корне проекта и содержит корректный JSON."
+              : "请检查项目根目录下的 inkos.json 是否存在且为合法 JSON，然后重试。 Check that inkos.json in the project root exists and is valid JSON, then retry."}
           </p>
           <button
             type="button"
             onClick={() => refetchProject()}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
-            重试 / Retry
+            {currentLang === "ru" ? "Повторить" : "重试 / Retry"}
           </button>
         </div>
       </div>
@@ -165,6 +170,7 @@ export function App() {
   if (showLanguageSelector) {
     return (
       <LanguageSelector
+        onUiRussian={() => setPreferredUiLanguage("ru")}
         onSelect={async (lang) => {
           await postApi("/project/language", { language: lang });
           setShowLanguageSelector(false);
@@ -196,24 +202,33 @@ export function App() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex gap-0.5 bg-muted/50 rounded-lg p-0.5">
+            <div role="group" aria-label={t("config.language")} className="flex gap-0.5 bg-muted/50 rounded-lg p-0.5">
               <button
-                onClick={async () => {
-                  await putApi("/project", { language: "zh" });
-                  refetchProject();
-                }}
+                type="button"
+                onClick={() => setPreferredUiLanguage("zh")}
+                aria-pressed={currentLang === "zh"}
                 className={`px-2.5 py-1 text-[16px] font-medium rounded-md ${currentLang === "zh" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                title="中文界面"
               >
                 中
               </button>
               <button
-                onClick={async () => {
-                  await putApi("/project", { language: "en" });
-                  refetchProject();
-                }}
+                type="button"
+                onClick={() => setPreferredUiLanguage("en")}
+                aria-pressed={currentLang === "en"}
                 className={`px-2.5 py-1 text-[16px] font-medium rounded-md ${currentLang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                title="English interface"
               >
                 EN
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreferredUiLanguage("ru")}
+                aria-pressed={currentLang === "ru"}
+                className={`px-2.5 py-1 text-[16px] font-medium rounded-md ${currentLang === "ru" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                title="Русский интерфейс"
+              >
+                RU
               </button>
             </div>
 
@@ -380,12 +395,12 @@ export function App() {
             </div>
           )}
           {route.page === "film-studio" && (
-            <Suspense fallback={<div className="p-6 text-sm">{tr("加载创作向导…", "Loading creation wizard…")}</div>}>
+            <Suspense fallback={<div className="p-6 text-sm">{tr("加载创作向导…", "Loading creation wizard…", "Загрузка мастера создания…")}</div>}>
               <FilmWizard projectId={route.projectId} nav={nav} theme={theme} t={t} sse={sse} />
             </Suspense>
           )}
           {route.page === "flow" && (
-            <Suspense fallback={<div className="p-6 text-sm">{tr("加载流程图…", "Loading flow view…")}</div>}>
+            <Suspense fallback={<div className="p-6 text-sm">{tr("加载流程图…", "Loading flow view…", "Загрузка схемы…")}</div>}>
               <FlowView projectId={route.projectId} nav={nav} theme={theme} t={t} />
             </Suspense>
           )}

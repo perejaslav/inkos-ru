@@ -1,6 +1,6 @@
 import { formatLengthCount, resolveLengthCountingMode, type Observation } from "@actalk/inkos-core";
 
-export type CliLanguage = "zh" | "en";
+export type CliLanguage = "zh" | "en" | "ru";
 
 type WriteResultShape = {
   readonly chapterNumber: number;
@@ -16,8 +16,8 @@ type ImportResultShape = {
   readonly continueBookId: string;
 };
 
-function localize(language: CliLanguage, messages: { zh: string; en: string }): string {
-  return language === "en" ? messages.en : messages.zh;
+function localize(language: CliLanguage, messages: { zh: string; en: string; ru?: string }): string {
+  return language === "ru" ? (messages.ru ?? messages.en) : language === "en" ? messages.en : messages.zh;
 }
 
 function normalizeCliLanguageTag(value: string | undefined): CliLanguage | undefined {
@@ -26,6 +26,7 @@ function normalizeCliLanguageTag(value: string | undefined): CliLanguage | undef
   }
 
   const normalized = value.trim().toLowerCase();
+  if (normalized.startsWith("ru")) return "ru";
   if (normalized.startsWith("en")) {
     return "en";
   }

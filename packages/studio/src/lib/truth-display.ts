@@ -44,6 +44,13 @@ const FOUNDATION_FILE_LABELS_EN: Record<string, string> = {
   "pending_hooks.md": "Hook Pool",
   "book_rules.md": "Narrative Rules",
 };
+const FOUNDATION_FILE_LABELS_RU: Record<string, string> = {
+  "outline/story_frame.md": "Основа сюжета",
+  "outline/volume_map.md": "План томов",
+  "current_state.md": "Текущее состояние",
+  "pending_hooks.md": "Сюжетные зацепки",
+  "book_rules.md": "Правила повествования",
+};
 
 // Language-aware display label for a foundation truth file. Returns undefined
 // for files that are not part of the foundation list (same qualification as
@@ -51,7 +58,8 @@ const FOUNDATION_FILE_LABELS_EN: Record<string, string> = {
 export function foundationFileLabel(name: string): string | undefined {
   const zh = FOUNDATION_FILE_LABELS[name];
   if (zh === undefined) return undefined;
-  return getAppLanguage() === "en" ? FOUNDATION_FILE_LABELS_EN[name] ?? zh : zh;
+  const lang = getAppLanguage();
+  return lang === "ru" ? FOUNDATION_FILE_LABELS_RU[name] ?? zh : lang === "en" ? FOUNDATION_FILE_LABELS_EN[name] ?? zh : zh;
 }
 
 // --- current_state.md ---------------------------------------------------

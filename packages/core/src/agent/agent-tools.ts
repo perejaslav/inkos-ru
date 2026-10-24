@@ -1,3 +1,4 @@
+import { normalizeContentLanguage } from "../utils/language-code.js";
 import { createBuiltInWorkProfileRegistry } from "../harness/builtin-profiles.js";
 import { Type, type Static } from "@mariozechner/pi-ai";
 import type { AgentTool, AgentToolResult, AgentToolUpdateCallback } from "@mariozechner/pi-agent-core";
@@ -112,7 +113,7 @@ function buildAgentBookConfig(input: {
     targetChapters: input.targetChapters ?? defaults.targetChapters ?? 200,
     chapterWordCount: input.chapterWordCount
       ?? defaults.chapterWordCount
-      ?? defaultChapterLength(input.language === "en" ? "en" : "zh"),
+      ?? defaultChapterLength(normalizeContentLanguage(input.language ?? "zh")),
     ...(input.minChapterLength!==undefined?{minChapterLength:input.minChapterLength}:{}),
     ...(input.maxChapterLength!==undefined?{maxChapterLength:input.maxChapterLength}:{}),
     language: input.language ?? "zh",
@@ -340,7 +341,7 @@ const ProposeActionParams = Type.Object({
     mode: Type.Optional(Type.String({ description: "Confirmed fanfiction boundary in the user's own terms." })),
     genre: Type.Optional(Type.String({ description: "Confirmed genre." })),
     platform: Type.Optional(Type.String({ minLength: 1 })),
-    language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en")])),
+    language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en"), Type.Literal("ru")])),
     targetChapters: Type.Optional(Type.Number({ description: "Confirmed total chapter count." })),
     chapterWordCount: Type.Optional(Type.Number({ description: "Confirmed per-chapter length." })),
     minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit minimum chapter length."})),
@@ -355,7 +356,7 @@ const ProposeActionParams = Type.Object({
     resumeFrom: Type.Optional(Type.Number({ description: "Existing Work only: resume an interrupted import from this 1-based source chapter. Omit when creating a new continuation Work." })),
     genre: Type.Optional(Type.String({ description: "Genre for a newly created continuation book." })),
     platform: Type.Optional(Type.String({ minLength: 1 })),
-    language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en")])),
+    language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en"), Type.Literal("ru")])),
     targetChapters: Type.Optional(Type.Number({ description: "Target total chapters for a new book." })),
     chapterWordCount: Type.Optional(Type.Number({ description: "Per-chapter length for a new book." })),
     minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit minimum chapter length."})),
@@ -368,7 +369,7 @@ const ProposeActionParams = Type.Object({
     direction: Type.Optional(Type.String({ description: "Confirmed standalone side-story direction." })),
     genre: Type.Optional(Type.String({ description: "Optional genre override; defaults to the parent book." })),
     platform: Type.Optional(Type.String({ minLength: 1 })),
-    language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en")])),
+    language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en"), Type.Literal("ru")])),
     targetChapters: Type.Optional(Type.Number({ description: "Optional chapter count; defaults to the parent book." })),
     chapterWordCount: Type.Optional(Type.Number({ description: "Optional chapter length; defaults to the parent book." })),
     minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit minimum chapter length."})),
@@ -383,7 +384,7 @@ const ProposeActionParams = Type.Object({
     sourceName: Type.Optional(Type.String({ description: "Human-readable reference work name." })),
     genre: Type.Optional(Type.String({ description: "Confirmed genre." })),
     platform: Type.Optional(Type.String({ minLength: 1 })),
-    language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en")])),
+    language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en"), Type.Literal("ru")])),
     targetChapters: Type.Optional(Type.Number({ description: "Confirmed total chapter count." })),
     chapterWordCount: Type.Optional(Type.Number({ description: "Confirmed per-chapter length." })),
     minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit minimum chapter length."})),
@@ -1299,7 +1300,7 @@ const FanficCreateParams = Type.Object({
   mode: Type.Optional(Type.String({ description: "Fanfiction boundary in the user's own terms." })),
   genre: Type.Optional(Type.String()),
   platform: Type.Optional(Type.String({ minLength: 1 })),
-  language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en")])),
+  language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en"), Type.Literal("ru")])),
   targetChapters: Type.Optional(Type.Integer({ minimum: 1 })),
   chapterWordCount: Type.Optional(Type.Integer({ minimum: 1 })),
   minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit minimum per chapter from the author."})),
@@ -1367,7 +1368,7 @@ const SpinoffCreateParams = Type.Object({
   direction: Type.Optional(Type.String({ description: "Side-story direction that must not advance the parent mainline." })),
   genre: Type.Optional(Type.String()),
   platform: Type.Optional(Type.String({ minLength: 1 })),
-  language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en")])),
+  language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en"), Type.Literal("ru")])),
   targetChapters: Type.Optional(Type.Integer({ minimum: 1 })),
   chapterWordCount: Type.Optional(Type.Integer({ minimum: 1 })),
   minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit minimum per chapter from the author."})),
@@ -1438,7 +1439,7 @@ const ImitationCreateParams = Type.Object({
   sourceName: Type.Optional(Type.String({ description: "Human-readable reference work name." })),
   genre: Type.Optional(Type.String()),
   platform: Type.Optional(Type.String({ minLength: 1 })),
-  language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en")])),
+  language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en"), Type.Literal("ru")])),
   targetChapters: Type.Optional(Type.Integer({ minimum: 1 })),
   chapterWordCount: Type.Optional(Type.Integer({ minimum: 1 })),
   minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit minimum per chapter from the author."})),
@@ -1506,7 +1507,7 @@ const ContinuationImportParams = Type.Object({
   })),
   genre: Type.Optional(Type.String()),
   platform: Type.Optional(Type.String({ minLength: 1 })),
-  language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en")])),
+  language: Type.Optional(Type.Union([Type.Literal("zh"), Type.Literal("en"), Type.Literal("ru")])),
   targetChapters: Type.Optional(Type.Integer({ minimum: 1 })),
   chapterWordCount: Type.Optional(Type.Integer({ minimum: 1 })),
   minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit minimum per chapter from the author."})),
@@ -1726,7 +1727,7 @@ export function createShortFictionRunTool(
       if (activeWork && !createBuiltInWorkProfileRegistry(projectRoot).require(activeWork.profileId).capabilityIds.includes("short-fiction")) {
         throw Object.assign(new Error("The active Work does not support short fiction production"), { code: "WORK_PROFILE_MISMATCH" });
       }
-      const language = activeWork ? (activeWork.language === "en" ? "en" : "zh") : shortPayload?.language ?? options.language;
+      const language = activeWork ? (normalizeContentLanguage(activeWork.language)) : shortPayload?.language ?? options.language;
       const charsPerChapter = shortPayload?.charsPerChapter ?? params.charsPerChapter;
       const activatedSkills = resolveProductionToolSkills(options);
       const result = await runPipelineWithAgentContext(
@@ -2181,7 +2182,7 @@ export function createGenerateCoverTool(
 // ---------------------------------------------------------------------------
 
 const PlayStartParams = Type.Object({
-  language:Type.Optional(Type.Union([Type.Literal('zh'),Type.Literal('en')],{description:'Language requested for the new world and its future narration. Omit to use the project language.'})),
+  language:Type.Optional(Type.Union([Type.Literal('zh'),Type.Literal('en'),Type.Literal('ru')],{description:'Language requested for the new world and its future narration. Omit to use the project language.'})),
   choiceCount:Type.Optional(Type.Integer({minimum:1,description:'Exact guided choice count. New guided worlds default to two; preserve a different user request.'})),
   title: Type.String({
     description: "Interactive world title. Use the user's natural direction as a short playable world title.",
@@ -2993,7 +2994,7 @@ export function createResyncChapterStateTool(
         }),
       );
       const observations = result.audit.observations;
-      const zh = options.language !== "en";
+      const zh = options.language === "zh";
       const summary = [
         zh
           ? `第 ${result.chapter.chapterNumber} 章正文未改动；状态、摘要与伏笔已重建，记录 ${observations.length} 条审查观察。`

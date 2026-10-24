@@ -3,6 +3,7 @@ import type { Theme } from "../hooks/use-theme";
 import type { TFunction } from "../hooks/use-i18n";
 import type { SSEMessage } from "../hooks/use-sse";
 import { fetchJson, postApi, useApi } from "../hooks/use-api";
+import { getAppLanguage, tr } from "../lib/app-language";
 import type { ChatAttachmentPayload } from "../store/chat/types";
 import { chatSelectors, useChatStore } from "../store/chat";
 import type { ChatSessionKind } from "../store/chat";
@@ -182,7 +183,6 @@ function cancelScrollFrame(id: ScrollFrameId): void {
 }
 
 function SkillPickerPanel({
-  isZh,
   skills,
   diagnostics,
   selectedSkillIds,
@@ -193,7 +193,6 @@ function SkillPickerPanel({
   onToggleSkill,
   onImport,
 }: {
-  readonly isZh: boolean;
   readonly skills: ReadonlyArray<StudioSkill>;
   readonly diagnostics?: ReadonlyArray<{ readonly path?: string; readonly message?: string }>;
   readonly selectedSkillIds: ReadonlyArray<string>;
@@ -212,11 +211,13 @@ function SkillPickerPanel({
       <div className="border-b border-border/40 px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-sm font-bold">{isZh ? "选择 Agent Skill" : "Select Agent Skills"}</div>
+            <div className="text-sm font-bold">{tr("选择 Agent Skill", "Select Agent Skills", "Выбрать навыки агента")}</div>
             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-              {isZh
-                ? "Agent 会按当前意图自主调用；点选 Skill 可强制它随下一条消息启用。"
-                : "The agent can choose a skill from your intent; selecting one forces it for the next message."}
+              {tr(
+                "Agent 会按当前意图自主调用；点选 Skill 可强制它随下一条消息启用。",
+                "The agent can choose a skill from your intent; selecting one forces it for the next message.",
+                "Агент может выбрать навык сам. Отметьте навык, чтобы использовать его в следующем сообщении.",
+              )}
             </p>
           </div>
           <div className="flex shrink-0 items-center">
@@ -227,7 +228,7 @@ function SkillPickerPanel({
               className="flex items-center gap-1.5 rounded-lg border border-border/50 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-40"
             >
               <FolderUp size={13} />
-              {isZh ? "导入" : "Import"}
+              {tr("导入", "Import", "Импорт")}
             </button>
             <input
               ref={folderInputRef}
@@ -247,20 +248,20 @@ function SkillPickerPanel({
         {createError ? <div className="mb-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">{createError}</div> : null}
         {diagnostics?.length ? (
           <div className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-            <div className="font-semibold">{isZh ? "部分外部 Skill 未加载" : "Some external skills were not loaded"}</div>
+            <div className="font-semibold">{tr("部分外部 Skill 未加载", "Some external skills were not loaded", "Некоторые внешние навыки не загружены")}</div>
             {diagnostics.slice(0, 4).map((item, index) => (
               <div key={`${item.path ?? "skill"}-${index}`} className="mt-1 break-all">
-                {item.path ? `${item.path}: ` : ""}{item.message ?? (isZh ? "格式无效" : "Invalid format")}
+                {item.path ? `${item.path}: ` : ""}{item.message ?? tr("格式无效", "Invalid format", "Недопустимый формат")}
               </div>
             ))}
           </div>
         ) : null}
         {loading ? (
-          <div className="px-2 py-6 text-center text-sm text-muted-foreground">{isZh ? "加载 Skill..." : "Loading skills..."}</div>
+          <div className="px-2 py-6 text-center text-sm text-muted-foreground">{tr("加载 Skill...", "Loading skills...", "Загрузка навыков...")}</div>
         ) : error ? (
           <div className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>
         ) : skills.length === 0 ? (
-          <div className="px-2 py-6 text-center text-sm text-muted-foreground">{isZh ? "还没有可用 Skill。" : "No skills available yet."}</div>
+          <div className="px-2 py-6 text-center text-sm text-muted-foreground">{tr("还没有可用 Skill。", "No skills available yet.", "Доступных навыков пока нет.")}</div>
         ) : (
           <div className="grid gap-2 md:grid-cols-2">
             {skills.map((skill) => {
@@ -301,6 +302,8 @@ function SkillPickerPanel({
 // -- Component --
 
 export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = activeBookId ? "book" : "book-create", nav, theme, t, sse: _sse }: ChatPageProps) {
+  const { data: activeBookConfig } = useApi<{ book: { language?: string } }>(activeBookId ? `/books/${activeBookId}` : "");
+  const { data: currentProject } = useApi<{ language?: string }>("/project");
   // -- Store selectors --
   const messages = useChatStore(chatSelectors.activeMessages);
   const activeSession = useChatStore(chatSelectors.activeSession);
@@ -334,6 +337,9 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
   const autoScrollPinnedRef = useRef(true);
 
   const isZh = t("nav.connected") === "\u5DF2\u8FDE\u63A5";
+  const isRu = getAppLanguage() === "ru";
+  const configuredWritingLanguage = activeBookConfig?.book.language ?? currentProject?.language;
+  const writingLanguage = configuredWritingLanguage === "ru" ? "ru" : configuredWritingLanguage === "zh" ? "zh" : "en";
   const hasBook = Boolean(activeBookId);
   const currentSessionKind: ChatSessionKind = activeSession?.sessionKind
     ?? (mode === "interactive-film-authoring" ? "interactive-film-authoring"
@@ -460,12 +466,12 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
   }, [customModelsLoading, groupedModels, services, servicesLoading, bankModelsLoading]);
 
   const selectedModelLabel = useMemo(() => {
-    if (!selectedModel) return isZh ? "选择模型" : "Select model";
+    if (!selectedModel) return tr("选择模型", "Select model", "Выберите модель");
     const group = groupedModels.find((item) => item.service === selectedService);
     const model = group?.models.find((item) => item.id === selectedModel);
     const modelLabel = model?.name ?? selectedModel;
     return group ? `${group.label} · ${modelLabel}` : modelLabel;
-  }, [groupedModels, selectedModel, selectedService, isZh]);
+  }, [groupedModels, selectedModel, selectedService, isZh, isRu]);
 
   // A session model is canonical once the session has run; project config only
   // seeds sessions that have not selected a model yet.
@@ -644,7 +650,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
     }
     setAttachedFiles((prev) => [...prev, ...accepted].slice(0, MAX_CHAT_ATTACHMENTS));
     setAttachmentError(rejected.length > 0
-      ? (isZh ? `以下文件过大，未添加：${rejected.join("、")}` : `Some files were too large: ${rejected.join(", ")}`)
+      ? (isRu ? `Некоторые файлы слишком большие: ${rejected.join(", ")}` : isZh ? `以下文件过大，未添加：${rejected.join("、")}` : `Some files were too large: ${rejected.join(", ")}`)
       : null);
   };
 
@@ -744,9 +750,11 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
     markProposalResolved(details.execId, "rejected");
     if (!activeSessionId) return;
     autoScrollPinnedRef.current = true;
-    const rejectionText = isZh
+    const rejectionText = writingLanguage === "zh"
       ? `取消这次操作：${details.title ?? details.instruction}`
-      : `Cancel this action: ${details.title ?? details.instruction}`;
+      : writingLanguage === "ru"
+        ? `Отмени это действие: ${details.title ?? details.instruction}`
+        : `Cancel this action: ${details.title ?? details.instruction}`;
     await sendMessage(activeSessionId, rejectionText, {
       activeBookId,
       sessionKind: currentSessionKind,
@@ -759,7 +767,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
     autoScrollPinnedRef.current = true;
     await sendMessage(
       activeSessionId,
-      buildNarrativeForecastSelectionInstruction(forecastId, branchId, isZh ? "zh" : "en"),
+      buildNarrativeForecastSelectionInstruction(forecastId, branchId, writingLanguage),
       {
         activeBookId,
         sessionKind: "book",
@@ -773,7 +781,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
     autoScrollPinnedRef.current = true;
     await sendMessage(
       activeSessionId,
-      buildNarrativeForecastRecheckInstruction(forecastId, isZh ? "zh" : "en"),
+      buildNarrativeForecastRecheckInstruction(forecastId, writingLanguage),
       {
         activeBookId,
         sessionKind: "book",
@@ -828,16 +836,22 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
 
   const emptyGuidance = (() => {
     if (currentSessionKind === "short") {
-      return isZh
+      return isRu
+        ? "Опишите идею рассказа, персонажей или центральный конфликт. InkOS Short подготовит текст, аннотацию и обложку."
+        : isZh
         ? "说一个短篇方向、标题灵感、人物压力或核心冲突，我会走 InkOS Short 生成正文、简介和封面。"
         : "Describe a short-fiction direction, title hook, pressure, or core conflict to run InkOS Short.";
     }
     if (isPlaySurface) {
-      return isZh
+      return isRu
+        ? "Опишите игровой мир, героя или начальное действие. Можно действовать свободно либо выбирать предложенные варианты."
+        : isZh
         ? "说一个可玩的世界、角色处境或开场动作，我会启动互动世界；之后你可以自由行动或点建议动作。"
         : "Describe a playable world, character situation, or opening action to start an interactive world.";
     }
-    return isZh
+    return isRu
+      ? "Расскажите, что хотите написать: жанр, мир, главный герой, основной конфликт."
+      : isZh
       ? "\u544A\u8BC9\u6211\u4F60\u60F3\u5199\u4EC0\u4E48\u2014\u2014\u9898\u6750\u3001\u4E16\u754C\u89C2\u3001\u4E3B\u89D2\u3001\u6838\u5FC3\u51B2\u7A81"
       : "Tell me what you want to write \u2014 genre, world, protagonist, core conflict";
   })();
@@ -855,7 +869,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
               catch(error) { setWorkSessionError(error instanceof Error ? error.message : String(error)); }
               finally { setCreatingWorkSession(false); }
             })(); }}>
-            {isZh ? "新建作品会话" : "New work session"}
+            {tr("新建作品会话", "New work session", "Новый сеанс")}
           </button>
         </div>
       ) : null}
@@ -878,7 +892,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
               <Gamepad2 size={24} className="text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground/70 max-w-md leading-7">
-              {isZh ? "选个玩法，进去再聊你想玩的世界。" : "Pick a playstyle, then describe the world you want in chat."}
+              {tr("选个玩法，进去再聊你想玩的世界。", "Pick a playstyle, then describe the world you want in chat.", "Выберите режим, затем опишите игровой мир в чате.")}
             </p>
             <div className="flex gap-3">
               <button
@@ -886,16 +900,16 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                 onClick={() => { if (activeSessionId) setSessionPlayMode(activeSessionId, "guided"); }}
                 className="w-40 rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5"
               >
-                <div className="text-sm font-medium text-foreground">{isZh ? "点着玩" : "Choices"}</div>
-                <div className="mt-1 text-xs leading-5 text-muted-foreground">{isZh ? "GM 给选项，点着推进" : "Pick from offered actions"}</div>
+                <div className="text-sm font-medium text-foreground">{tr("点着玩", "Choices", "Варианты")}</div>
+                <div className="mt-1 text-xs leading-5 text-muted-foreground">{tr("GM 给选项，点着推进", "Pick from offered actions", "Выбирайте из предложенных действий")}</div>
               </button>
               <button
                 type="button"
                 onClick={() => { if (activeSessionId) setSessionPlayMode(activeSessionId, "open"); }}
                 className="w-40 rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5"
               >
-                <div className="text-sm font-medium text-foreground">{isZh ? "自由玩" : "Free"}</div>
-                <div className="mt-1 text-xs leading-5 text-muted-foreground">{isZh ? "自己打字，想干嘛干嘛" : "Type anything you want"}</div>
+                <div className="text-sm font-medium text-foreground">{tr("自由玩", "Free", "Свободный")}</div>
+                <div className="mt-1 text-xs leading-5 text-muted-foreground">{tr("自己打字，想干嘛干嘛", "Type anything you want", "Пишите свои действия свободно")}</div>
               </button>
             </div>
           </div>
@@ -1005,7 +1019,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
               <Message from="assistant">
                 <MessageContent>
                   <Shimmer className="text-sm" duration={1.5}>
-                    {isZh ? "思考中..." : "Thinking..."}
+                    {tr("思考中...", "Thinking...", "Обдумывание...")}
                   </Shimmer>
                 </MessageContent>
               </Message>
@@ -1023,6 +1037,8 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
               onAction={handleQuickAction}
               disabled={loading || !activeSessionId}
               isZh={isZh}
+              isRu={isRu}
+              writingLanguage={writingLanguage}
             />
           </div>
         </div>
@@ -1060,7 +1076,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
               className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-secondary/30 px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
             >
               <RotateCcw size={14} />
-              {isZh ? "重试上一条消息" : "Retry last message"}
+              {tr("重试上一条消息", "Retry last message", "Повторить сообщение")}
             </button>
           </div>
         </div>
@@ -1072,7 +1088,6 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
             <div className="relative flex-1 rounded-xl bg-secondary/30 transition-all">
               {skillPanelOpen ? (
                 <SkillPickerPanel
-                  isZh={isZh}
                   skills={availableSkills}
                   diagnostics={skillsData?.diagnostics}
                   selectedSkillIds={selectedSkillIds}
@@ -1107,7 +1122,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                         type="button"
                         onClick={() => setSelectedSkillIds((prev) => prev.filter((id) => id !== skill.id))}
                         className="rounded-full p-0.5 hover:bg-primary/20"
-                        aria-label={isZh ? `移除 ${skill.name}` : `Remove ${skill.name}`}
+                        aria-label={isRu ? `Убрать ${skill.name}` : isZh ? `移除 ${skill.name}` : `Remove ${skill.name}`}
                       >
                         <X size={12} />
                       </button>
@@ -1131,7 +1146,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                             type="button"
                             onClick={() => setAttachedFiles((prev) => prev.filter((item) => item !== file))}
                             className="rounded-full p-0.5 hover:bg-muted"
-                            aria-label={isZh ? `移除 ${file.name}` : `Remove ${file.name}`}
+                            aria-label={isRu ? `Убрать ${file.name}` : isZh ? `移除 ${file.name}` : `Remove ${file.name}`}
                           >
                             <X size={12} />
                           </button>
@@ -1150,8 +1165,8 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                   onClick={() => setSkillPanelOpen((value) => !value)}
                   disabled={loading || !activeSessionId}
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 transition-colors disabled:opacity-30 ${skillPanelOpen || selectedSkillIds.length > 0 ? "bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40 hover:text-primary"}`}
-                  title={isZh ? "添加 Skill" : "Add skill"}
-                  aria-label={isZh ? "添加 Skill" : "Add skill"}
+                  title={tr("添加 Skill", "Add skill", "Добавить навык")}
+                  aria-label={tr("添加 Skill", "Add skill", "Добавить навык")}
                 >
                   <Plus size={16} strokeWidth={2.4} />
                 </button>
@@ -1160,8 +1175,8 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                   onClick={() => fileInputRef.current?.click()}
                   disabled={!activeSessionId}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-30"
-                  title={isZh ? "上传图片或资料" : "Attach files"}
-                  aria-label={isZh ? "上传图片或资料" : "Attach files"}
+                  title={tr("上传图片或资料", "Attach files", "Прикрепить файлы")}
+                  aria-label={tr("上传图片或资料", "Attach files", "Прикрепить файлы")}
                 >
                   <Paperclip size={16} strokeWidth={2.3} />
                 </button>
@@ -1170,7 +1185,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void onSend(input); } }}
-                  placeholder={isZh ? "输入指令..." : "Enter command..."}
+                  placeholder={t("common.enterCommand")}
                   disabled={!activeSessionId || !sessionMatchesRoute || creatingWorkSession}
                   rows={1}
                   className="flex-1 bg-transparent text-base leading-7 placeholder:text-muted-foreground/50 outline-none! border-none! ring-0! shadow-none focus:outline-none! focus:ring-0! focus:border-none! resize-none disabled:opacity-50 max-h-[200px] overflow-y-auto"
@@ -1180,7 +1195,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                   onClick={() => void onSend(input)}
                   disabled={(!input.trim() && attachedFiles.length === 0 && !loading) || !activeSessionId || !sessionMatchesRoute || creatingWorkSession}
                   className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:scale-100 shadow-sm shadow-primary/20"
-                  title={loading && !input.trim() && attachedFiles.length === 0 ? (isZh ? "停止当前回复" : "Stop") : undefined}
+                  title={loading && !input.trim() && attachedFiles.length === 0 ? tr("停止当前回复", "Stop", "Остановить") : undefined}
                 >
                   {loading && !input.trim() && attachedFiles.length === 0
                     ? <Square size={13} fill="currentColor" />
@@ -1189,7 +1204,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
               </div>
               <div className="flex items-center gap-2 px-3 pb-2 border-t border-border/20 pt-1.5">
                 {modelPickerStatus === "loading" ? (
-                  <span className="text-[15px] text-muted-foreground/40 animate-pulse">{isZh ? "加载模型..." : "Loading models..."}</span>
+                  <span className="text-[15px] text-muted-foreground/40 animate-pulse">{tr("加载模型...", "Loading models...", "Загрузка моделей...")}</span>
                 ) : modelPickerStatus === "ready" ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-muted text-[16px] transition-colors cursor-pointer">
@@ -1211,7 +1226,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                     onClick={() => nav.toServices()}
                     className="text-[15px] text-muted-foreground/50 hover:text-primary transition-colors"
                   >
-                    {isZh ? "配置模型 →" : "Set up models →"}
+                    {tr("配置模型 →", "Set up models →", "Настроить модели →")}
                   </button>
                 )}
                 {isPlaySurface && (
@@ -1219,10 +1234,10 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                     type="button"
                     onClick={() => setWorldPanelOpen((v) => !v)}
                     className={`ml-auto flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[16px] font-medium transition-colors ${worldPanelOpen ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-primary"}`}
-                    title={isZh ? "查看世界：持有 / 状态 / 关系" : "View world: holdings / state / relations"}
+                    title={tr("查看世界：持有 / 状态 / 关系", "View world: holdings / state / relations", "Мир: предметы / состояние / отношения")}
                   >
                     <Gamepad2 size={18} />
-                    {isZh ? "查看世界" : "View World"}
+                    {tr("查看世界", "View World", "Посмотреть мир")}
                   </button>
                 )}
               </div>
@@ -1233,22 +1248,22 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                   type="button"
                   onClick={() => setPlayImageMenuOpen((value) => !value)}
                   disabled={loading || !activeSessionId}
-                  title={isZh ? "自动配图" : "Auto illustration"}
+                  title={tr("自动配图", "Auto illustration", "Автоиллюстрации")}
                   className={`flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 bg-secondary/40 shadow-sm transition-all hover:border-primary/50 hover:bg-primary/10 hover:text-primary active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 ${playImageMenuOpen || playImageSettings.actors || playImageSettings.moments || playImageSettings.inventory ? "text-primary" : "text-muted-foreground"}`}
-                  aria-label={isZh ? "自动配图" : "Auto illustration"}
+                  aria-label={tr("自动配图", "Auto illustration", "Автоиллюстрации")}
                 >
                   <Palette size={17} />
                 </button>
                 {playImageMenuOpen ? (
                   <div className="absolute bottom-12 right-0 z-30 w-44 rounded-xl border border-border/50 bg-card/95 p-2 shadow-xl backdrop-blur">
                     <div className="mb-1.5 px-1 text-[12px] leading-5 font-semibold uppercase tracking-wider text-muted-foreground/60">
-                      {isZh ? "自动配图" : "Auto illustration"}
+                      {tr("自动配图", "Auto illustration", "Автоиллюстрации")}
                     </div>
                     {(["actors", "moments", "inventory"] as const).map((key) => (
                       <label
                         key={key}
                         className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[14px] leading-6 ${playImageCoverReady ? "cursor-pointer text-foreground hover:bg-secondary/50" : "cursor-not-allowed text-muted-foreground/40"}`}
-                        title={playImageCoverReady ? undefined : (isZh ? "先在「模型配置」里配好生图 API 才能开启" : "Configure an image API in Model Settings first")}
+                        title={playImageCoverReady ? undefined : tr("先在「模型配置」里配好生图 API 才能开启", "Configure an image API in Model Settings first", "Сначала настройте API изображений в разделе моделей")}
                       >
                         <input
                           type="checkbox"
@@ -1258,15 +1273,15 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                           className="h-4 w-4 accent-primary"
                         />
                         {key === "actors"
-                          ? (isZh ? "为角色配图" : "Characters")
+                          ? tr("为角色配图", "Characters", "Персонажи")
                           : key === "moments"
-                            ? (isZh ? "为时刻配图" : "Moments")
-                            : (isZh ? "为背包配图" : "Inventory")}
+                            ? tr("为时刻配图", "Moments", "События")
+                            : tr("为背包配图", "Inventory", "Инвентарь")}
                       </label>
                     ))}
                     {!playImageCoverReady ? (
                       <p className="mt-1 px-1 text-[12px] leading-5 text-muted-foreground/50">
-                        {isZh ? "未检测到生图 API。" : "No image API configured."}
+                        {tr("未检测到生图 API。", "No image API configured.", "API изображений не настроен.")}
                       </p>
                     ) : null}
                   </div>
@@ -1276,7 +1291,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
           </div>
           {playImageError ? (
             <p className="mt-2 text-right text-[13px] leading-5 text-destructive/80">
-              {isZh ? `配图失败：${playImageError}` : `Image failed: ${playImageError}`}
+              {isRu ? `Ошибка изображения: ${playImageError}` : isZh ? `配图失败：${playImageError}` : `Image failed: ${playImageError}`}
             </p>
           ) : null}
         </div>

@@ -23,3 +23,4 @@ Apply this method inside the active architect, writer, auditor, or reviser opera
 
 Load `references/foundation-design.md` while creating or rebuilding a book foundation. Load `references/reader-contract-and-progression.md` while planning, writing, reviewing, or revising chapters.
 Load `references/state-projection.md` while observing a completed chapter or settling runtime truth files.
+When authored content language is Russian (ru), load references/russian-prose.md and follow its Russian prose rules.

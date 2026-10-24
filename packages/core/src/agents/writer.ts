@@ -86,7 +86,7 @@ export class WriterAgent extends BaseAgent {
   }
 
   private localize(language: "zh" | "en" | "ru", messages: { zh: string; en: string }): string {
-    return language === "en" ? messages.en : messages.zh;
+    return language === "zh" ? messages.zh : messages.en;
   }
 
   private logInfo(language: "zh" | "en" | "ru", messages: { zh: string; en: string }): void {
@@ -472,7 +472,9 @@ export class WriterAgent extends BaseAgent {
     );
     const contextSections = renderNarrativeSelectedContext(otherEntries, language);
     const userDirectionBlock = directionEntries.length > 0
-      ? (language === "en"
+      ? (language === "ru"
+          ? `## Указания автора (обязательны; выше настроек модели)\n${renderNarrativeSelectedContext(directionEntries, language)}\n`
+          : language === "en"
           ? `## User direction (overrides model defaults — must follow)\n${renderNarrativeSelectedContext(directionEntries, language)}\n`
           : `## 用户方向（优先于模型默认，必须遵循）\n${renderNarrativeSelectedContext(directionEntries, language)}\n`)
       : "";
@@ -553,6 +555,13 @@ ${trimmed}
     const selectedContext = renderNarrativeSelectedContext(contextPackage.selectedContext, language)
       .replace(/^### /gm, "- ");
 
+    if (language === "ru") {
+      return `\n## Управляющий контекст главы
+${chapterIntent}
+
+### Выбранный контекст
+${selectedContext || "- нет"}\n`;
+    }
     if (language === "en") {
       return `\n## Chapter Control Inputs
 ${chapterIntent}

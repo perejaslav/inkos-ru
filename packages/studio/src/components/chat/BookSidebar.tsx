@@ -14,10 +14,11 @@ import { ChaptersSection } from "../sidebar/ChaptersSection";
 import { CharacterSection } from "../sidebar/CharacterSection";
 import { PendingHooksView } from "../sidebar/PendingHooksView";
 import {
-  FOUNDATION_FILE_LABELS,
+  foundationFileLabel,
   presentCurrentState,
   roleFromPath,
 } from "../../lib/truth-display";
+import { tr } from "../../lib/app-language";
 
 export interface BookSidebarProps {
   readonly bookId: string;
@@ -32,7 +33,7 @@ const streamdownPlugins = { cjk };
 // character's name, foundation files their friendly label, everything else its
 // path as a last resort.
 function artifactLabel(file: string): string {
-  return roleFromPath(file)?.name ?? FOUNDATION_FILE_LABELS[file] ?? file;
+  return roleFromPath(file)?.name ?? foundationFileLabel(file) ?? file;
 }
 
 // Read-mode body for an opened file. A few files need reader-friendly handling
@@ -49,7 +50,11 @@ function renderTruthBody(
     const { isEmpty, body: stateBody } = presentCurrentState(content);
     return isEmpty ? (
       <p className="text-[14px] leading-6 text-muted-foreground/60 italic">
-        还没有运行状态。开始写作后，每写完一章这里会自动记录最新的故事进展。
+        {tr(
+          "还没有运行状态。开始写作后，每写完一章这里会自动记录最新的故事进展。",
+          "No runtime state yet. Progress appears here as chapters are written.",
+          "Состояние сюжета пока не сохранено. Оно появится здесь после написания глав.",
+        )}
       </p>
     ) : (
       <Streamdown plugins={streamdownPlugins} mode="static">{stateBody}</Streamdown>
@@ -70,7 +75,7 @@ function ArtifactView({ bookId }: { readonly bookId: string }) {
 
   const isChapter = artifactChapter !== null;
   const label = isChapter
-    ? `第 ${artifactChapter} 章`
+    ? tr(`第 ${artifactChapter} 章`, `Chapter ${artifactChapter}`, `Глава ${artifactChapter}`)
     : artifactFile ? artifactLabel(artifactFile) : "";
 
   useEffect(() => {
@@ -165,7 +170,9 @@ function ArtifactView({ bookId }: { readonly bookId: string }) {
             <Loader2 size={16} className="text-muted-foreground animate-spin" />
           </div>
         ) : content === null ? (
-          <p className="text-[14px] leading-6 text-muted-foreground/50 italic px-4 py-3">文件不存在</p>
+          <p className="text-[14px] leading-6 text-muted-foreground/50 italic px-4 py-3">
+            {tr("文件不存在", "File not found", "Файл не найден")}
+          </p>
         ) : editing ? (
           <textarea
             value={editContent}
@@ -183,8 +190,6 @@ function ArtifactView({ bookId }: { readonly bookId: string }) {
 }
 
 function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
-  const isZh = t("nav.connected") === "\u5DF2\u8FDE\u63A5";
-
   // Show writing indicator only during pipeline operations (write/audit/revise)
   const [activeOp, setActiveOp] = useState<string | null>(null);
   useEffect(() => {
@@ -204,9 +209,9 @@ function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
   }, [sse.messages]);
 
   const OP_LABELS: Record<string, string> = {
-    write: isZh ? "正在写作中..." : "Writing...",
-    audit: isZh ? "正在审计中..." : "Auditing...",
-    revise: isZh ? "正在修订中..." : "Revising...",
+    write: tr("正在写作中...", "Writing...", "Написание..."),
+    audit: tr("正在审计中...", "Auditing...", "Проверка..."),
+    revise: tr("正在修订中...", "Revising...", "Редактирование..."),
   };
 
   return (
@@ -220,7 +225,7 @@ function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
         </div>
       )}
       <ProgressSection sse={sse} />
-      <ChaptersSection bookId={bookId} isZh={isZh} />
+      <ChaptersSection bookId={bookId} />
       <CharacterSection bookId={bookId} />
       <FoundationSection bookId={bookId} />
       <SummarySection bookId={bookId} />
@@ -300,7 +305,9 @@ export function BookSidebarToggle({ bookId, theme, t, sse }: BookSidebarProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-border/20">
-              <span className="text-[15px] leading-6 font-medium text-muted-foreground">书籍信息</span>
+              <span className="text-[15px] leading-6 font-medium text-muted-foreground">
+                {tr("书籍信息", "Book information", "Информация о книге")}
+              </span>
               <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
                 <PanelRightClose size={14} />
               </button>

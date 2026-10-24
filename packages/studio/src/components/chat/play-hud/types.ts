@@ -70,6 +70,9 @@ export const KIND_LABEL_ZH: Record<string, string> = {
 export const KIND_LABEL_EN: Record<string, string> = {
   item: "Item", evidence: "Evidence", clue: "Clue", claim: "Claim", proof_chain: "Proof chain",
 };
+export const KIND_LABEL_RU: Record<string, string> = {
+  item: "Предмет", evidence: "Улика", clue: "Подсказка", claim: "Утверждение", proof_chain: "Цепочка доказательств",
+};
 
 // Mirrors core PlayEvidenceStatusSchema order (packages/core/src/models/play.ts:122-131).
 export const EVIDENCE_LADDER = [
@@ -82,4 +85,8 @@ export const LADDER_LABEL_ZH: Record<string, string> = {
 export const LADDER_LABEL_EN: Record<string, string> = {
   unknown: "Unknown", hinted: "Hinted", seen: "Seen", collected: "Collected",
   verified: "Verified", weaponized: "Weaponized", exposed: "Exposed", exhausted: "Exhausted",
+};
+export const LADDER_LABEL_RU: Record<string, string> = {
+  unknown: "Неизвестно", hinted: "Есть намёк", seen: "Обнаружено", collected: "Собрано",
+  verified: "Проверено", weaponized: "Использовано", exposed: "Раскрыто", exhausted: "Исчерпано",
 };

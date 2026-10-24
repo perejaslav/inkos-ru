@@ -86,6 +86,13 @@ export function buildSpinoffFoundationContext(
   language: "zh" | "en" | "ru",
 ): string {
   const dir = direction?.trim();
+  if (language === "ru") {
+    return [
+      "## Это побочная история основного произведения",
+      dir ? `\n## Указания для побочной истории\n${dir}` : "",
+      `\n## Канон основного произведения\n${parentCanon}`,
+    ].filter(Boolean).join("\n");
+  }
   if (language === "en") {
     return [
       "## This is a SIDE-STORY (番外)",
@@ -251,7 +258,7 @@ export class PipelineRunner {
   }
 
   private localize(language: LengthLanguage, messages: { zh: string; en: string }): string {
-    return language === "en" ? messages.en : messages.zh;
+    return language === "zh" ? messages.zh : messages.en;
   }
 
   private async resolveBookLanguage(
@@ -270,12 +277,12 @@ export class PipelineRunner {
   }
 
   private languageFromLengthSpec(lengthSpec: Pick<LengthSpec, "countingMode">): LengthLanguage {
-    return lengthSpec.countingMode === "en_words" ? "en" : "zh";
+    return lengthSpec.countingMode === "ru_words" ? "ru" : lengthSpec.countingMode === "en_words" ? "en" : "zh";
   }
 
   private logStage(language: LengthLanguage, message: { zh: string; en: string }): void {
     this.config.logger?.info(
-      `${this.localize(language, { zh: "阶段：", en: "Stage: " })}${this.localize(language, message)}`,
+      `${language === "ru" ? "Этап: " : this.localize(language, { zh: "阶段：", en: "Stage: " })}${this.localize(language, message)}`,
     );
   }
 
@@ -828,7 +835,7 @@ export class PipelineRunner {
     const content = await this.readChapterContent(bookDir, targetChapter);
     const chapterBrief = await readChapterUserBrief(bookDir, targetChapter);
     const governed = await this.prepareExistingChapterContext(book,targetChapter,
-      chapterBrief ?? (book.language==='en'?`Review existing chapter ${targetChapter}.`:`审查现有第${targetChapter}章。`));
+      chapterBrief ?? (book.language==='ru'?`Проверь существующую главу ${targetChapter}.`:book.language==='en'?`Review existing chapter ${targetChapter}.`:`审查现有第${targetChapter}章。`));
     const auditor = new ContinuityAuditor(this.agentCtxFor("auditor", bookId));
     const language = book.language;
     this.logStage(language, {
@@ -907,7 +914,9 @@ export class PipelineRunner {
         persistedChapterBrief,
         externalContext ?? this.config.externalContext,
       );
-      const revisionIntent=effectiveExternalContext?.trim() || (language==='en'
+      const revisionIntent=effectiveExternalContext?.trim() || (language==='ru'
+        ? `Проверь и исправь существующую главу ${targetChapter}, режим: ${mode}.`
+        : language==='en'
         ? `Review and revise the existing chapter ${targetChapter} in ${mode} mode.`
         : `审查并以 ${mode} 模式修订现有第${targetChapter}章。`);
       const reviseControlInput=await this.prepareExistingChapterContext(book,targetChapter,revisionIntent);
@@ -916,7 +925,7 @@ export class PipelineRunner {
         || mode === "rewrite"
         || mode === "rework";
       const preRevision = explicitRevisionRequested
-        ? { observations: [], summary: language === "en" ? "User-directed revision" : "用户定向修订" }
+        ? { observations: [], summary: language === "ru" ? "Редактура по указанию автора" : language === "en" ? "User-directed revision" : "用户定向修订" }
         : await this.collectReviewObservations({
             auditor,
             book,
@@ -1086,7 +1095,9 @@ export class PipelineRunner {
       if (changed) await archiveChapterVersion(bookDir, targetChapter, content, "revision");
       const reviseLang = book.language;
 
-      const downstreamRevisionNotice = language === "en"
+      const downstreamRevisionNotice = language === "ru"
+        ? `Глава ${targetChapter} изменена. Повторно проверь связность последующей главы с предыдущими событиями.`
+        : language === "en"
         ? `Chapter ${targetChapter} changed; re-review this downstream chapter for continuity.`
         : `第${targetChapter}章已重写，请重新检查本章与前文的连续性。`;
       const updatedIndex = index.map((ch) => {
@@ -1519,7 +1530,7 @@ export class PipelineRunner {
       chapterSummaries:renderChapterSummariesProjection(baselineSnapshot.chapterSummaries,pipelineLang)};
 
     const reducedControlInput = await this.prepareExistingChapterContext(book,targetChapter,
-      this.config.externalContext ?? (pipelineLang==='en'?`Reconstruct facts from existing chapter ${targetChapter}, preserving its prose.`:`根据现有第${targetChapter}章重建事实，保持正文。`));
+      this.config.externalContext ?? (pipelineLang==='ru'?`Восстанови факты существующей главы ${targetChapter}, сохранив её художественный текст.`:pipelineLang==='en'?`Reconstruct facts from existing chapter ${targetChapter}, preserving its prose.`:`根据现有第${targetChapter}章重建事实，保持正文。`));
 
     const writer = new WriterAgent(this.agentCtxFor("writer", bookId));
     let syncedOutput = await writer.settleChapterState({
@@ -1971,6 +1982,22 @@ export class PipelineRunner {
   }
 
   private buildImportReplayStateSeed(language: LengthLanguage): string {
+    if (language === "ru") {
+      return [
+        "# Текущее состояние",
+        "",
+        "| Поле | Значение |",
+        "| --- | --- |",
+        "| Текущая глава | 0 |",
+        "| Местоположение | (не задано) |",
+        "| Состояние героя | (не задано) |",
+        "| Текущая цель | (не задана) |",
+        "| Ограничения | (не заданы) |",
+        "| Союзники | (не заданы) |",
+        "| Текущий конфликт | (не задан) |",
+        "",
+      ].join("\n");
+    }
     if (language === "en") {
       return [
         "# Current State",
@@ -2005,6 +2032,9 @@ export class PipelineRunner {
   }
 
   private buildImportReplayHooksSeed(language: LengthLanguage): string {
+    if (language === "ru") {
+      return ["# Незавершённые сюжетные линии", "", "| hook_id | начало | тип | статус | последнее развитие | ожидаемая развязка | примечания |", "| --- | --- | --- | --- | --- | --- | --- |", ""].join("\n");
+    }
     if (language === "en") {
       return [
         "# Pending Hooks",

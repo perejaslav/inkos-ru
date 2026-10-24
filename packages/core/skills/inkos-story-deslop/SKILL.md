@@ -14,3 +14,4 @@ Use this skill when the user says prose feels generic, mechanical, over-explaine
 - Respond in the user's language.
 
 Load `references/semantic-cleanup.md` for a passage-level diagnosis or revision brief.
+For Russian manuscripts, load references/russian-cleanup.md.

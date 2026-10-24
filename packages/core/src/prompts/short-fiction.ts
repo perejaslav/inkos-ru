@@ -32,7 +32,8 @@ export interface ShortFictionPackagePromptInput {
 }
 
 export function buildShortFictionOutlineSystemPrompt(language: ShortFictionLanguage = "zh"): string {
-  return language === "en"
+  if (language === "ru") return "Составь по-русски полный план короткого произведения по активированному Skill и переданным материалам. Передай план через инструмент результата.";
+  return language !== "zh"
     ? "Create the complete short-story plan using the activated short-writing Skill and only the supplied material. Submit it through the outline tool."
     : "按已激活的短篇写作 Skill 和用户材料生成完整短篇方案，通过方案工具提交。";
 }
@@ -40,19 +41,21 @@ export function buildShortFictionOutlineSystemPrompt(language: ShortFictionLangu
 export function buildShortFictionOutlineUserPrompt(input: ShortFictionOutlinePromptInput, language: ShortFictionLanguage = "zh"): string {
   const reference = input.reference?.text?.trim();
   return [
-    language === "en" ? "## Creative Direction" : "## 创作方向",
+    ...(language === "ru" ? ["Write all story titles, descriptions and chapter plans in Russian."] : []),
+    language !== "zh" ? "## Creative Direction" : "## 创作方向",
     input.direction,
-    ...(input.title?[language==="en"?`Confirmed title: ${input.title}. Preserve it exactly.`:`已确定书名：${input.title}。书名保持原样。`]:[]),
+    ...(input.title?[language!=="zh"?`Confirmed title: ${input.title}. Preserve it exactly.`:`已确定书名：${input.title}。书名保持原样。`]:[]),
     "",
-    language === "en" ? "## Target" : "## 目标",
-    language === "en"
+    language !== "zh" ? "## Target" : "## 目标",
+    language !== "zh"
       ? `${input.chapterCount} chapters; about ${input.charsPerChapter} words per chapter.`
       : `${input.chapterCount} 章；每章约 ${input.charsPerChapter} 字。`,
-    ...(reference ? ["", language === "en" ? "## Reference" : "## 参考材料", reference] : []),
+    ...(reference ? ["", language !== "zh" ? "## Reference" : "## 参考材料", reference] : []),
   ].join("\n");
 }
 export function buildShortFictionWriterSystemPrompt(language: ShortFictionLanguage = "zh"): string {
-  return language === "en"
+  if (language === "ru") return "Напиши по-русски только заказанную группу глав, используя полный план и активированный Skill. Через инструмент черновика передай законченные главы.";
+  return language !== "zh"
     ? "Write exactly the requested chapter batch using the activated short-writing Skill and the full plan. Submit complete chapters through the draft tool."
     : "按已激活的短篇写作 Skill 和完整方案写本批指定章节，通过初稿工具提交完整章节。";
 }
@@ -61,55 +64,60 @@ export function buildShortFictionWriterUserPrompt(input: ShortFictionDraftPrompt
   const chapters = requestedShortFictionChapters(input);
   const previous = input.previousDraftMarkdown?.trim();
   return [
-    language === "en" ? "## Task" : "## 任务",
-    language === "en"
+    ...(language === "ru" ? ["Write all chapter titles, opening hook and prose in Russian. Count Russian words, not characters."] : []),
+    language !== "zh" ? "## Task" : "## 任务",
+    language !== "zh"
       ? `Write only chapters ${chapters.join(", ")} of ${input.chapterCount}; about ${input.charsPerChapter} words each.`
       : `只写第 ${chapters.join("、")} 章；全篇 ${input.chapterCount} 章，每章约 ${input.charsPerChapter} 字。`,
-    ...(input.title?[language==="en"?`Confirmed title: ${input.title}. Preserve it exactly.`:`已确定书名：${input.title}。书名保持原样。`]:[]),
-    ...(input.openingHookChars&&chapters.includes(1)?[language==="en"?`Also submit an independent opening scene of about ${input.openingHookChars} words before chapter one. Keep the complete first chapter separate.`:`另交约 ${input.openingHookChars} 字的正文前独立开篇场面，放在 openingHook 字段；第一章仍须完整，不能用开篇钩子代替。`]:[]),
-    ...(input.maxChapterLength !== undefined ? [language === "en" ? `Maximum per chapter: ${input.maxChapterLength} words.` : `每章正文最多 ${input.maxChapterLength} 个非空白字符（含标点）。`] : []),
-    ...(input.minChapterLength !== undefined ? [language === "en" ? `Minimum per chapter: ${input.minChapterLength} words.` : `每章正文至少 ${input.minChapterLength} 个非空白字符（含标点）。`] : []),
+    ...(input.title?[language!=="zh"?`Confirmed title: ${input.title}. Preserve it exactly.`:`已确定书名：${input.title}。书名保持原样。`]:[]),
+    ...(input.openingHookChars&&chapters.includes(1)?[language!=="zh"?`Also submit an independent opening scene of about ${input.openingHookChars} words before chapter one. Keep the complete first chapter separate.`:`另交约 ${input.openingHookChars} 字的正文前独立开篇场面，放在 openingHook 字段；第一章仍须完整，不能用开篇钩子代替。`]:[]),
+    ...(input.maxChapterLength !== undefined ? [language !== "zh" ? `Maximum per chapter: ${input.maxChapterLength} words.` : `每章正文最多 ${input.maxChapterLength} 个非空白字符（含标点）。`] : []),
+    ...(input.minChapterLength !== undefined ? [language !== "zh" ? `Minimum per chapter: ${input.minChapterLength} words.` : `每章正文至少 ${input.minChapterLength} 个非空白字符（含标点）。`] : []),
     "",
-    language === "en" ? "## Direction" : "## 创作方向",
+    language !== "zh" ? "## Direction" : "## 创作方向",
     input.direction,
     "",
-    language === "en" ? "## Plan" : "## 故事方案",
+    language !== "zh" ? "## Plan" : "## 故事方案",
     input.outlineMarkdown,
-    ...(previous ? ["", language === "en" ? "## Persisted previous chapters" : "## 已落盘前文章节", previous] : []),
+    ...(previous ? ["", language !== "zh" ? "## Persisted previous chapters" : "## 已落盘前文章节", previous] : []),
   ].join("\n");
 }
 export function buildShortFictionDraftReviewSystemPrompt(language: ShortFictionLanguage = "zh"): string {
-  return language === "en"
+  if (language === "ru") return "Проверь готовый текст по активированному Skill. Для каждого замечания укажи sourceId и номера начальной и конечной строк в нумерованном источнике; приложение само извлечёт цитату. Отличай расхождения с планом от внутренних противоречий текста. Передай через инструмент рецензии замечания с доказательствами и краткое резюме на русском языке. Пустой массив замечаний допустим.";
+  return language !== "zh"
     ? "Review the persisted draft with the activated short-writing Skill. Attribute every finding to its sourceId and select a short inclusive startLine/endLine range from the numbered source; the host copies the exact excerpt. Distinguish outline differences from manuscript contradictions. Submit evidence-backed observations and a concise summary through the review tool. An empty observations array is valid."
     : "按已激活的短篇写作 Skill 审查已落盘成稿。每项观察指定 sourceId 和该编号来源内一小段连续的 startLine/endLine（含首尾行），系统按行号截取原文。区分大纲差异与正文内部矛盾。通过审稿工具提交有证据的观察和简短总结；observations 为空是合法结果。";
 }
 
 export function buildShortFictionDraftReviewUserPrompt(input: ShortFictionDraftReviewPromptInput, language: ShortFictionLanguage = "zh"): string {
   return [
-    language === "en" ? "## Direction" : "## 创作方向", input.direction,
-    "", language === "en" ? "## Source: outline (plan, not manuscript)" : "## Source: outline（大纲）", input.outlineMarkdown,
-    "", language === "en" ? "## Review scope" : "## 审查范围", input.reviewScope ?? "whole-story",
-    ...(input.revisionRequest ? ["", language === "en" ? "## Latest revision request" : "## 最近修改请求", input.revisionRequest] : []),
-    ...(input.measurements ? ["", language==="en"?"## Host-verified manuscript measurements":"## 宿主核验的成稿计量",
+    ...(language === "ru" ? ["Write the review observations and summary in Russian."] : []),
+    language !== "zh" ? "## Direction" : "## 创作方向", input.direction,
+    "", language !== "zh" ? "## Source: outline (plan, not manuscript)" : "## Source: outline（大纲）", input.outlineMarkdown,
+    "", language !== "zh" ? "## Review scope" : "## 审查范围", input.reviewScope ?? "whole-story",
+    ...(input.revisionRequest ? ["", language !== "zh" ? "## Latest revision request" : "## 最近修改请求", input.revisionRequest] : []),
+    ...(input.measurements ? ["", language!=="zh"?"## Host-verified manuscript measurements":"## 宿主核验的成稿计量",
       JSON.stringify({contentScope:"complete_manuscript",chapterLengthScope:"prose_excluding_chapter_headings",...input.measurements}),
-      language==="en"?"Use these measured lengths. Numbered source lines below contain the complete supplied manuscript; line numbering does not mean an excerpt.":"篇幅判断采用以上实测值。以下编号来源包含所提供的完整正文；编号用于引用，不表示节选。"] : []),
-    "", language === "en" ? "## Draft under review" : "## 待审正文", input.draftMarkdown,
+      language!=="zh"?"Use these measured lengths. Numbered source lines below contain the complete supplied manuscript; line numbering does not mean an excerpt.":"篇幅判断采用以上实测值。以下编号来源包含所提供的完整正文；编号用于引用，不表示节选。"] : []),
+    "", language !== "zh" ? "## Draft under review" : "## 待审正文", input.draftMarkdown,
   ].join("\n");
 }
 
 export function buildShortFictionPackageSystemPrompt(language: ShortFictionLanguage = "zh"): string {
-  return language === "en"
+  if (language === "ru") return "Подготовь на русском языке описание и рекламные материалы готового произведения по активированному Skill. Сохраняй фактическое название и сюжет, передай материалы через инструмент результата.";
+  return language !== "zh"
     ? "Package the persisted draft using the activated short-writing Skill. Preserve its actual title and plot, then submit through the package tool."
     : "按已激活的短篇写作 Skill 包装已落盘正文，保留实际标题与剧情，通过包装工具提交。";
 }
 
 export function buildShortFictionPackageUserPrompt(input: ShortFictionPackagePromptInput, language: ShortFictionLanguage = "zh"): string {
   return [
-    language === "en" ? "## Direction" : "## 创作方向", input.direction,
-    "", language === "en" ? "## Plan" : "## 故事方案", input.outlineMarkdown.trim(),
-    "", language === "en" ? "## Persisted draft" : "## 已落盘正文", input.draftMarkdown.trim(),
-    "", language === "en" ? "## Existing title" : "## 当前标题", input.draftTitle,
-    ...(input.reviewContext?["",language==='en'?"## Review evidence":"## 审稿依据",input.reviewContext]:[]),
+    ...(language === "ru" ? ["Write the synopsis, selling points and other text fields in Russian."] : []),
+    language !== "zh" ? "## Direction" : "## 创作方向", input.direction,
+    "", language !== "zh" ? "## Plan" : "## 故事方案", input.outlineMarkdown.trim(),
+    "", language !== "zh" ? "## Persisted draft" : "## 已落盘正文", input.draftMarkdown.trim(),
+    "", language !== "zh" ? "## Existing title" : "## 当前标题", input.draftTitle,
+    ...(input.reviewContext?["",language==='ru'?"## Замечания рецензента":language==='en'?"## Review evidence":"## 审稿依据",input.reviewContext]:[]),
   ].join("\n");
 }
 function requestedShortFictionChapters(input: ShortFictionDraftPromptInput): number[] {

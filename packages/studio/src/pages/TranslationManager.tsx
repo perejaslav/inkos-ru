@@ -4,6 +4,7 @@ import type { TFunction } from "../hooks/use-i18n";
 import { useColors } from "../hooks/use-colors";
 import { fetchJson, useApi } from "../hooks/use-api";
 import { Download, FileText, Languages, Loader2, Play, Upload } from "lucide-react";
+import { getAppLanguage } from "../lib/app-language";
 
 interface Nav { toDashboard: () => void }
 
@@ -127,10 +128,31 @@ const LANGUAGE_PRESETS_EN = [
   "Turkish",
 ] as const;
 
+const LANGUAGE_PRESETS_RU = [
+  "Автоопределение",
+  "Русский",
+  "Английский",
+  "Китайский (упрощённый)",
+  "Китайский (традиционный)",
+  "Японский",
+  "Корейский",
+  "Французский",
+  "Немецкий",
+  "Испанский",
+  "Португальский",
+  "Арабский",
+  "Индонезийский",
+  "Вьетнамский",
+  "Тайский",
+  "Итальянский",
+  "Турецкий",
+] as const;
+
 export function TranslationManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFunction }) {
   const c = useColors(theme);
   const isZh = t("nav.connected") === "已连接";
-  const languagePresets = isZh ? LANGUAGE_PRESETS_ZH : LANGUAGE_PRESETS_EN;
+  const isRu = getAppLanguage() === "ru";
+  const languagePresets = isZh ? LANGUAGE_PRESETS_ZH : isRu ? LANGUAGE_PRESETS_RU : LANGUAGE_PRESETS_EN;
   const { data, loading, error, refetch } = useApi<TranslationListResponse>("/translations");
   const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<TranslationDetailResponse | null>(null);
@@ -140,8 +162,8 @@ export function TranslationManager({ nav, theme, t }: { nav: Nav; theme: Theme; 
   const [file, setFile] = useState<File | null>(null);
   const [uploaded, setUploaded] = useState<TranslationUploadResponse | null>(null);
   const [title, setTitle] = useState("");
-  const [sourceLanguage, setSourceLanguage] = useState(isZh ? "自动识别" : "Auto detect");
-  const [targetLanguage, setTargetLanguage] = useState(isZh ? "中文（简体）" : "English");
+  const [sourceLanguage, setSourceLanguage] = useState(isZh ? "自动识别" : isRu ? "Автоопределение" : "Auto detect");
+  const [targetLanguage, setTargetLanguage] = useState(isZh ? "中文（简体）" : isRu ? "Русский" : "English");
   const [segmentMaxChars, setSegmentMaxChars] = useState(1200);
   const [previewChapterNumber, setPreviewChapterNumber] = useState<number | null>(null);
 
@@ -342,7 +364,7 @@ export function TranslationManager({ nav, theme, t }: { nav: Nav; theme: Theme; 
               {languagePresets.map((language) => <option key={`source-${language}`} value={language} />)}
             </datalist>
             <datalist id="translation-target-language-options">
-              {languagePresets.filter((language) => language !== (isZh ? "自动识别" : "Auto detect")).map((language) => (
+              {languagePresets.filter((language) => language !== (isZh ? "自动识别" : isRu ? "Автоопределение" : "Auto detect")).map((language) => (
                 <option key={`target-${language}`} value={language} />
               ))}
             </datalist>

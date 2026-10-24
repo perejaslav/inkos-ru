@@ -34,6 +34,13 @@ describe("project bootstrap", () => {
     await expect(readFile(join(tempDir, ".node-version"), "utf-8")).resolves.toBe("22\n");
   }, 20_000);
 
+  it("persists Russian project language without modifying Chinese or English defaults", async () => {
+    const { initializeProjectDirectory } = await import("../project-bootstrap.js");
+    await initializeProjectDirectory(tempDir, { language: "ru" });
+    const config = JSON.parse(await readFile(join(tempDir, "inkos.json"), "utf-8"));
+    expect(config.language).toBe("ru");
+  });
+
   it("does not overwrite support files when auto-initializing", async () => {
     await writeFile(join(tempDir, ".env"), "EXISTING=1\n", "utf-8");
     await writeFile(join(tempDir, ".gitignore"), "CUSTOM\n", "utf-8");

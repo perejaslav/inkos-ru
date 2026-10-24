@@ -7,6 +7,7 @@ import { readShortProductionState } from "../../pipeline/short-production-state.
 import { loadAvailableAgentSkills } from "../../skills/builtin-loader.js";
 import { resolveProfileSkillActivations } from "../../skills/activations.js";
 import { createBuiltInWorkProfileRegistry } from "../builtin-profiles.js";
+import { normalizeContentLanguage } from "../../utils/language-code.js";
 
 const Parameters = Type.Object({
   workId: Type.String({ minLength: 1 }),
@@ -16,7 +17,7 @@ const Parameters = Type.Object({
   minChapterLength: Type.Optional(Type.Integer({minimum:1,description:"The lower end of the requested per-chapter range. Omit to preserve the existing Work contract."})),
   openingHookChars: Type.Optional(Type.Integer({minimum:1,description:"Requested independent opening scene length. Omit to preserve the existing Work contract."})),
   maxChaptersPerCall: Type.Optional(Type.Integer({ minimum: 1 })),
-  maxChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit per-chapter maximum in native length units: non-whitespace characters including punctuation for Chinese, words for English. Omit when no hard upper bound is requested."})),
+  maxChapterLength: Type.Optional(Type.Integer({minimum:1,description:"Explicit per-chapter maximum in native length units: non-whitespace characters including punctuation for Chinese, words for English and Russian. Omit when no hard upper bound is requested."})),
   reviewScope: Type.Optional(Type.String()),
 });
 
@@ -31,7 +32,7 @@ export function createShortProductionStageTools(pipeline: PipelineRunner, root: 
       let profileId = "short-fiction";
       let language: "zh" | "en" | "ru" = "zh";
       let title:string|undefined;
-      try { const work = await loadWorkManifest(root, params.workId); profileId = work.profileId;title=work.title; language = work.language === "en" ? "en" : "zh"; } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+      try { const work = await loadWorkManifest(root, params.workId); profileId = work.profileId;title=work.title; language = normalizeContentLanguage(work.language); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
       const profile = createBuiltInWorkProfileRegistry(root).require(profileId);
       if (!profile.capabilityIds.includes("short-fiction")) throw new Error("This Work does not declare short-fiction capability");
       const skills = resolveProfileSkillActivations((await loadAvailableAgentSkills({ projectRoot: root })).skills, profile);

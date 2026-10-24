@@ -31,6 +31,7 @@ import {
 } from "../pipeline/short-fiction-runner.js";
 
 export interface PlayImageWorldContext {
+  readonly language?: "zh" | "en" | "ru";
   readonly visualFacts?:string;
   readonly premise?: string;
   readonly worldContract?: string;
@@ -49,6 +50,15 @@ function renderImageWorldContext(input: PlayImageWorldInput): string {
   const premise = input.premise?.trim();
   const worldContract = input.worldContract?.trim();
   const visualContract = input.visualContract?.trim();
+  if (input.language === "ru") {
+    return [
+      premise ? `Начальные условия (текущее состояние имеет приоритет): ${premise}` : "",
+      worldContract ? `Правила мира: ${worldContract}` : "",
+      visualContract ? `Визуальные требования: ${visualContract}` : "",
+      input.currentMoment ? `Текущий момент (приоритет над историей): ${JSON.stringify(input.currentMoment)}` : "",
+      input.visualFacts ? `Описание персонажей и предметов: внешность и цвета бери из сущностей; фактического владельца определяй только по currentHoldings и активным связям. Не изображай уже переданные предметы у прежнего владельца. Показывай только присутствующих в сцене.\n${input.visualFacts}` : "",
+    ].filter(Boolean).join("\n");
+  }
   return [
     premise ? `开场前提（不代表当前持有关系或任务进度）：${premise}` : "",
     worldContract ? `世界契约：${worldContract}` : "",
@@ -82,11 +92,12 @@ export function buildPlayEntityImagePrompt(
 ): string {
   const worldContext = renderImageWorldContext(worldPremise);
   const summary = entity.summary?.trim();
+  const ru = typeof worldPremise !== "string" && worldPremise?.language === "ru";
   return [
     worldContext,
-    `对象类型：${entity.type}`,
-    `对象：${entity.label}`,
-    summary ? `细节：${summary}` : "",
+    `${ru ? "Тип объекта" : "对象类型"}：${entity.type}`,
+    `${ru ? "Объект" : "对象"}：${entity.label}`,
+    summary ? `${ru ? "Подробности" : "细节"}：${summary}` : "",
   ].filter(Boolean).join("\n");
 }
 
@@ -95,7 +106,7 @@ export function buildPlaySceneImagePrompt(sceneText: string, worldPremise?: Play
   const worldContext = renderImageWorldContext(worldPremise);
   return [
     worldContext,
-    "当前场景：",
+    typeof worldPremise !== "string" && worldPremise?.language === "ru" ? "Текущая сцена:" : "当前场景：",
     sceneText.trim(),
   ].filter(Boolean).join("\n");
 }

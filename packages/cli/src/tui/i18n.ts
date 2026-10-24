@@ -1,6 +1,6 @@
 import type { ChatDepth } from "./chat-depth.js";
 
-export type TuiLocale = "zh-CN" | "en";
+export type TuiLocale = "zh-CN" | "en" | "ru-RU";
 
 export interface TuiCopy {
   readonly locale: TuiLocale;
@@ -163,6 +163,38 @@ const EN: TuiCopy = {
   },
 };
 
+const RU: TuiCopy = {
+  locale: "ru-RU",
+  labels: {
+    project: "Проект", book: "Книга", depth: "Глубина", session: "Сеанс",
+    messageCount: (count) => count + " сообщений", stage: "Этап", model: "Модель",
+    error: "Ошибка", recent: "Недавнее", pending: "Ожидает подтверждения",
+    draft: "Черновик", ready: "Готово", none: "нет", notConfigured: "не настроено", unknown: "неизвестно",
+  },
+  composer: {
+    placeholder: "Попросите InkOS написать, исправить или объяснить…",
+    emptyConversation: "Опишите задачу для InkOS.",
+    helper: "Enter — отправить • /new • /short • /play • /cover • /write • /confirm • /model • /depth • /help",
+    submitting: "Отправка…", failed: "Предыдущий запрос завершился ошибкой", ready: "Готово",
+  },
+  notes: {
+    help: "Команды: /new — книга, /short — рассказ, /play — интерактивная история, /cover — обложка, /write — следующая глава, /confirm, /cancel, /model, /status, /clear, /depth, /quit. Остальные задачи задавайте обычным языком.",
+    status: (stage) => "Состояние: " + stage + ".",
+    config: "В этом интерфейсе /config пока не поддерживается. Используйте inkos config set-global.",
+    depthSet: (depthLabel) => "Глубина рассуждений: " + depthLabel + ".",
+    modelCurrent: (modelLabel) => "Текущая модель: " + modelLabel + ".",
+    modelSet: (model) => "Модель текущего сеанса: " + model + ".",
+    newBookGuide: "Опишите замысел книги: жанр, мир, героя и главный конфликт. Агент уточнит детали и запустит создание книги.",
+    noLlmConfig: "Параметры LLM не найдены.", setupProvider: "Сначала настройте поставщика API.",
+  },
+  roles: { user: "Вы", assistant: "InkOS", system: "Система" },
+  activity: {
+    thinking: "Думает", checking: "Проверяет", writing: "Пишет",
+    reviewing: "Редактирует", updating: "Обновляет",
+  },
+  depthLabels: { light: "Низкая", normal: "Обычная", deep: "Высокая" },
+};
+
 export function resolveTuiLocale(
   env: NodeJS.ProcessEnv = process.env,
   preferredLanguage?: string,
@@ -182,7 +214,7 @@ export function resolveTuiLocale(
 }
 
 export function getTuiCopy(locale: TuiLocale): TuiCopy {
-  return locale === "en" ? EN : ZH_CN;
+  return locale === "zh-CN" ? ZH_CN : locale === "ru-RU" ? RU : EN;
 }
 
 function normalizeLocale(value: string | undefined): TuiLocale | undefined {
@@ -195,6 +227,7 @@ function normalizeLocale(value: string | undefined): TuiLocale | undefined {
     return undefined;
   }
 
+  if (normalized.startsWith("ru")) return "ru-RU";
   if (normalized.startsWith("zh")) {
     return "zh-CN";
   }

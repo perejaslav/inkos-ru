@@ -12,3 +12,4 @@ Apply this method during translation and translation review.
 - Keep segment boundaries operational, but read neighboring segments and chapter context as one passage so references and cadence survive batching.
 - During review, check fidelity, missing content, added content, terminology, referents, names, numbers, and target-language readability with concrete evidence.
 - A parser or provider failure is not a translation-quality verdict. Preserve completed segments and resume from the first unfinished segment.
+When target language is Russian, load references/russian-translation.md.

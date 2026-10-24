@@ -54,7 +54,7 @@ export async function processTuiAgentInput(params: {
   );
   const userTimestamp = Date.now();
   const currentBookId = params.activeBookId ?? params.session.activeBookId ?? null;
-  const language = config.language === "en" ? "en" : "zh";
+  const language = config.language === "ru" ? "en" : config.language === "en" ? "en" : "zh";
   const useWork = params.input.trim().match(/^\/use\s+([^\s]+)$/i)?.[1];
   const selectedWork = useWork ? await loadWorkManifest(params.projectRoot, useWork) : null;
   const localWorkResponse = selectedWork

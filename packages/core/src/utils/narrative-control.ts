@@ -12,13 +12,14 @@ export function renderMemoAsNarrativeBlock(
   language: "zh" | "en" | "ru" = "zh",
 ): string {
   const isEn = language === "en";
+  const ru = language === "ru";
   const sections: string[] = [];
 
-  sections.push(`## ${isEn ? "Goal" : "目标"}\n- ${memo.goal}`);
+  sections.push(`## ${ru ? "Цель" : isEn ? "Goal" : "目标"}\n- ${memo.goal}`);
 
   if (memo.threadRefs.length > 0) {
     const threads = memo.threadRefs.map((id) => `- ${id}`).join("\n");
-    sections.push(`## ${isEn ? "Thread Refs" : "关联线索"}\n${threads}`);
+    sections.push(`## ${ru ? "Сюжетные линии" : isEn ? "Thread Refs" : "关联线索"}\n${threads}`);
   }
 
   // Emit the 7-section memo body at top level so each heading is a task.
@@ -40,9 +41,9 @@ export function renderNarrativeSelectedContext(
   entries: ReadonlyArray<ContextPackage["selectedContext"][number]>,
   language: "zh" | "en" | "ru" = "zh",
 ): string {
-  const heading = language === "en" ? "Evidence" : "证据";
-  const reasonLabel = language === "en" ? "reason" : "原因";
-  const detailLabel = language === "en" ? "detail" : "细节";
+  const heading = language === "ru" ? "Источник" : language === "en" ? "Evidence" : "证据";
+  const reasonLabel = language === "ru" ? "основание" : language === "en" ? "reason" : "原因";
+  const detailLabel = language === "ru" ? "подробности" : language === "en" ? "detail" : "细节";
 
   return entries
     .map((entry, index) => {

@@ -26,10 +26,10 @@ export function countChapterLength(
   }
 
   if (countingMode === "ru_words") {
-    // Russian is counted in words, not Han characters or ASCII-only English tokens.
-    // Intl.Segmenter handles Cyrillic, mixed scripts and punctuation without extra dependencies.
-    const segmenter = new Intl.Segmenter("ru", { granularity: "word" });
-    return [...segmenter.segment(normalized)].filter((part) => part.isWordLike).length;
+    // Editorial contract: hyphenated compounds count as one; em-dash separates words.
+    // Covers Cyrillic, mixed scripts, numbers, combining marks and straight/curly apostrophes.
+    const words = normalized.match(/[\p{L}\p{M}\p{N}]+(?:[-\u2011\u0027\u2019][\p{L}\p{M}\p{N}]+)*/gu);
+    return words?.length ?? 0;
   }
 
   return normalized.replace(/\s+/g, "").length;

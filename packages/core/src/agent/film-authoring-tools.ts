@@ -388,8 +388,8 @@ export function createDraftStructureTool(
         return textResult(`Reference topology applied: ${next.nodes.length} nodes; ${missingSceneNodeIds.length} scenes still need generation.`,graphUpdatedDetails(rev,{skillIds:deps.skillIds?.()??[],referenceTopology:{workId:params.referenceWorkId,sourceHash},missingSceneNodeIds}));
       }
       const context = graph ? buildFilmAuthoringContext(graph) : "(empty graph)";
-      const systemPrompt = language === "en" ? STRUCT_SYSTEM_EN : STRUCT_SYSTEM_ZH;
-      const userPrompt = language === "en"
+      const systemPrompt = language === "ru" ? STRUCT_SYSTEM_EN + "\nWrite all human-readable scene names, summaries and labels in Russian." : language === "en" ? STRUCT_SYSTEM_EN : STRUCT_SYSTEM_ZH;
+      const userPrompt = language !== "zh"
         ? `${context}\n\nSkeleton instruction: ${params.instruction}`
         : `${context}\n\n骨架指令：${params.instruction}`;
       const requirements=await readFilmRequirements(projectRoot,projectId);

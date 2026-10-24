@@ -5,6 +5,7 @@ import { ShortFictionBatchDraftSchema, renderShortFictionDraftMarkdown, renderSh
 import { ShortPackageToolSchema } from "../agents/short-fiction-tool.js";
 import { Value } from "@sinclair/typebox/value";
 import { countChapterLength, resolveLengthCountingMode } from "../utils/length-metrics.js";
+import { normalizeContentLanguage } from "../utils/language-code.js";
 import { TranslationProjectManifestSchema, TranslationGlossarySchema, TranslationChapterFileSchema, validateTranslationManifestOwnership } from "../translation/types.js";
 import { StoryGraphSchema } from "../interactive-film/graph-schema.js";
 import { assertVariableTypes } from "../interactive-film/validation.js";
@@ -63,7 +64,7 @@ export function validatedArtifactWrites(work: WorkManifest, path: string, conten
     if (path === "source/final/sales-package.json") {
       if (!Value.Check(ShortPackageToolSchema, document)) throw new ArtifactValidationError("ARTIFACT_INVALID", "Invalid short-fiction sales package", path);
       const sales = {...document, rawContent: ""};
-      sales.rawContent = renderShortFictionSalesPackage(sales, work.language === "en" ? "en" : "zh");
+      sales.rawContent = renderShortFictionSalesPackage(sales, normalizeContentLanguage(work.language));
       return [write(path, JSON.stringify(sales, null, 2)), write("source/final/sales-package.md", sales.rawContent), write("source/final/cover-prompt.md", sales.coverPrompt)];
     }
     if (path.endsWith(".md") && !["source/final/sales-package.md", "source/final/cover-prompt.md", "source/final/cover-request.md"].includes(path)) {
@@ -72,7 +73,7 @@ export function validatedArtifactWrites(work: WorkManifest, path: string, conten
     if (path === authority) {
       try {
         const parsed = ShortFictionBatchDraftSchema.parse(document);
-        const language = work.language === "en" ? "en" : "zh";
+        const language = normalizeContentLanguage(work.language);
         const draft = { ...parsed, chapters: parsed.chapters.map(chapter => ({ ...chapter,
           charCount: countChapterLength(chapter.content, resolveLengthCountingMode(language)),
         })) };

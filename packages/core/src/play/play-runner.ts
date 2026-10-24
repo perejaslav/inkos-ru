@@ -156,7 +156,7 @@ export class PlayRunner {
     const language = world.language;
     const action: PlayActionIntent = {
       actionKind: "look",
-      intent: language === "en" ? "Seed the opening state for the first playable scene." : "播种第一幕已成立的开场状态。",
+      intent: language === "ru" ? "Создать начальное состояние первой игровой сцены." : language === "en" ? "Seed the opening state for the first playable scene." : "播种第一幕已成立的开场状态。",
       manner: "",
       risk: "",
       ambiguity: "",
@@ -181,7 +181,8 @@ export class PlayRunner {
     if (mutation.blocked || !isOpeningGraphReady(seededGraph)) {
       throw new PlayOpeningSeedError(
         mutation.blockedReason
-          || (language === "en"
+          || (language === "ru" ? "Начальная сцена не создала пригодный граф игрока и мира. Повторите создание мира."
+            : language === "en"
             ? "The opening scene did not produce a usable player/world graph. Retry world creation."
             : "开场没有生成可用的玩家与世界图谱，请重试创建互动世界。"),
       );
@@ -528,7 +529,7 @@ function buildReplayContext(input: {
   readonly language: "zh" | "en" | "ru";
 }): string {
   const replacement = input.replacementInput?.trim();
-  if (input.language === "en") {
+  if (input.language !== "zh") {
     return [
       "This is a regeneration of the previous turn, not a new next turn.",
       `Original player input: ${input.originalInput}`,
@@ -537,6 +538,7 @@ function buildReplayContext(input: {
       "The Current state summary is authoritative, especially the Time section. Do not move the clock backward, invent a different elapsed time, or write another timestamp.",
       "Do not add new player actions the user did not take. Vary prose, sensory detail, pressure, and emphasis while staying inside the same applied state.",
       "Concrete new facts, people, objects, locations, or clues must already be present in Applied changes or Current state summary.",
+      ...(input.language === "ru" ? ["Keep narration and suggested actions in Russian."] : []),
     ].filter(Boolean).join("\n");
   }
   return [
@@ -555,7 +557,7 @@ function renderPlayWorldContext(world: PlayWorld | null | undefined, language: "
   const premise = world.premise?.trim();
   const worldContract = world.worldContract?.trim();
   const visualContract = world.visualContract?.trim();
-  const isEn = language === "en";
+  const isEn = language !== "zh";
   const blocks = [
     premise
       ? `${isEn ? "Opening premise (current state supersedes completed objectives and changed facts)" : "开场前提（已完成目标和已变化事实以当前状态为准）"}:\n${premise}`
@@ -592,7 +594,7 @@ function requireRestorableGraphDB(db: PlayReducerDB): PlayReducerDB & {
 }
 
 function renderEntity(entity: PlayEntity, language: "zh" | "en" | "ru"): string {
-  const isEn = language === "en";
+  const isEn = language !== "zh";
   const detail = [entity.summary, entity.status ? `${isEn ? "status" : "状态"}: ${entity.status}` : ""]
     .filter(Boolean)
     .join(isEn ? "; " : "；");

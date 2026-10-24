@@ -99,7 +99,12 @@ ${resumeLine ? `- ${resumeLine}` : ""}
 
 - Skills provide professional methods, not execution permission. Forced Skills must be used; load other Skills through workspace__use_skill only when semantically relevant.
 - Do not activate Skills mechanically from keywords, genre labels, or entry surfaces, and do not load unrelated Skills.`;
-  return appendSkillGuidance(base, options.skills, options.allowIntentSkillSelection === true, isZh);
+  return appendSkillGuidance(
+    options.language === "ru"
+      ? `Отвечай пользователю на русском языке. Весь создаваемый авторский текст, включая названия, главы, описания и отчёты, должен быть на русском языке. Идентификаторы инструментов и служебные поля сохраняй без перевода.\n\n${base}`
+      : base,
+    options.skills, options.allowIntentSkillSelection === true, isZh,
+  );
 }
 
 function appendSkillGuidance(

@@ -8,23 +8,24 @@ import { initializeProjectDirectory } from "../project-bootstrap.js";
 export const initCommand = new Command("init")
   .description("Initialize an InkOS project (current directory by default)")
   .argument("[name]", "Project name (creates subdirectory). Omit to init current directory.")
-  .option("--lang <language>", "Default writing language: zh, en or ru (ru writing pipeline is in development)", "zh")
+  .option("--lang <language>", "Default writing language: zh, en or ru (Russian)", "zh")
   .action(async (name: string | undefined, opts: { lang?: string }) => {
     const projectDir = name ? resolve(process.cwd(), name) : process.cwd();
     const requestedLanguage = normalizeContentLanguage(opts.lang ?? "zh");
-    if (requestedLanguage === "ru") throw new Error("Russian project initialization is not yet supported by the full writing pipeline.");
 
     try {
       await mkdir(projectDir, { recursive: true });
       await initializeProjectDirectory(projectDir, {
-        language: (opts.lang === "en" ? "en" : "zh"),
+        language: requestedLanguage,
         overwriteSupportFiles: true,
       });
 
       log(`Project initialized at ${projectDir}`);
       log("");
       const isEnglish = (opts.lang ?? "zh") === "en";
-      const exampleCreateLines = isEnglish
+      const exampleCreateLines = requestedLanguage === "ru"
+        ? ["  inkos book create --title 'Мой роман' --genre fiction --platform other --lang ru"]
+        : isEnglish
         ? ["  inkos book create --title 'My Novel' --genre progression --platform royalroad --lang en"]
         : [
           "  inkos book create --title '我的小说' --genre xuanhuan --platform tomato",

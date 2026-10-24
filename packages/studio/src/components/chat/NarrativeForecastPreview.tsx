@@ -76,18 +76,22 @@ export function getNarrativeForecastPreviewDetails(exec: ToolExecution): Narrati
 export function buildNarrativeForecastSelectionInstruction(
   forecastId: string,
   branchId: string,
-  language: "zh" | "en",
+  language: "zh" | "en" | "ru",
 ): string {
-  return language === "zh"
+  return language === "ru"
+    ? `Вызови select_narrative_branch для ветки ${branchId} прогноза ${forecastId}. Сохрани только план-кандидат; не меняй текст, структуру и канонические факты.`
+    : language === "zh"
     ? `请调用 select_narrative_branch，选择推演 ${forecastId} 的 ${branchId}。只保存候选计划，不修改正文、大纲或正史状态。`
     : `Call select_narrative_branch for ${branchId} in forecast ${forecastId}. Save only the candidate plan; do not modify prose, outlines, or canonical state.`;
 }
 
 export function buildNarrativeForecastRecheckInstruction(
   forecastId: string,
-  language: "zh" | "en",
+  language: "zh" | "en" | "ru",
 ): string {
-  return language === "zh"
+  return language === "ru"
+    ? `Вызови get_narrative_forecast для прогноза ${forecastId} и проверь его актуальность.`
+    : language === "zh"
     ? `请调用 get_narrative_forecast，重新核验推演 ${forecastId} 是否已经过期。`
     : `Call get_narrative_forecast for forecast ${forecastId} and report whether it is stale.`;
 }

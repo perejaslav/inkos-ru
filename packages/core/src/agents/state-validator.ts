@@ -39,9 +39,9 @@ export class StateValidatorAgent extends BaseAgent {
       return { observations: [], consistent: true, reconciliationRequired: false };
     }
 
-    const langInstruction = language === "en"
-      ? "Respond in English."
-      : "用中文回答。";
+    const langInstruction = language === "ru"
+      ? "Пиши отчёт и замечания по-русски."
+      : language === "en" ? "Respond in English." : "用中文回答。";
 
     const systemPrompt = `Validate the derived truth projection against the current chapter and supplied authority using the activated long-writing Skill. ${langInstruction}
 Do not rewrite the chapter or silently resolve contradictory sources. A hook marked superseded retains an explicitly withdrawn plan for history; its original premise is not active canon or a future promise. Verify its notes against the current withdrawal authority, rather than requiring that premise to occur in the chapter. Set reconciliationRequired=true only when a different truth projection can resolve the mismatch; a contradiction inside the chapter or between authorities remains a reported observation and does not authorize another settlement pass. Submit the Boolean decision and a concise Markdown report with concrete evidence through the validation tool. Use an empty report when there are no findings.`;
@@ -75,7 +75,7 @@ ${chapterContent}`;
         ],
         {
           name: "submit_state_validation",
-          label: language === "en" ? "Submit state validation" : "提交状态对账",
+          label: language === "ru" ? "Передать проверку состояния" : language === "en" ? "Submit state validation" : "提交状态对账",
           description: "Submit whether state reconciliation is required and the concrete evidence.",
           parameters: StateValidationToolSchema,
           validate: result => {

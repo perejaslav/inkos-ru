@@ -518,7 +518,7 @@ function mergeRequirements(
   requirements: string | undefined,
   language: "zh" | "en" | "ru" = "zh",
 ): string {
-  const extraLabel = language === "en" ? "Additional requirements:" : "补充要求：";
+  const extraLabel = language === "ru" ? "Дополнительные требования:" : language === "en" ? "Additional requirements:" : "补充要求：";
   return [
     instruction.trim(),
     requirements?.trim() ? `\n${extraLabel}\n${requirements.trim()}` : "",

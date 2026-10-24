@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { getAppLanguage } from "../lib/app-language";
 
-export function LanguageSelector({ onSelect }: { onSelect: (lang: "zh" | "en") => void }) {
+export function LanguageSelector({ onSelect, onUiRussian }: { onSelect: (lang: "zh" | "en") => void; onUiRussian: () => void }) {
   const [hovering, setHovering] = useState<"zh" | "en" | null>(null);
   const [selected, setSelected] = useState<"zh" | "en" | null>(null);
 
@@ -22,7 +23,7 @@ export function LanguageSelector({ onSelect }: { onSelect: (lang: "zh" | "en") =
       </div>
 
       {/* Language cards — generous, distinct, immersive */}
-      <div className="flex gap-8 mb-16">
+      <div className="flex flex-wrap justify-center gap-8 mb-16">
         <button
           onClick={() => handleSelect("zh")}
           onMouseEnter={() => setHovering("zh")}
@@ -66,8 +67,22 @@ export function LanguageSelector({ onSelect }: { onSelect: (lang: "zh" | "en") =
         </button>
       </div>
 
-      <div className="text-sm text-muted-foreground">
-        可在设置中更改 · Can be changed in Settings
+      <div className="mb-4 text-center text-sm text-muted-foreground">
+        {getAppLanguage() === "ru"
+          ? "Выберите язык создаваемых произведений. Язык интерфейса выбирается отдельно."
+          : "Choose the language of your writing project / 选择创作语言"}
+      </div>
+      <div className="flex items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={onUiRussian}
+          className={`rounded-lg border px-4 py-2 text-sm transition-colors ${getAppLanguage() === "ru" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+        >
+          Русский интерфейс
+        </button>
+        <span className="text-sm text-muted-foreground">
+          {getAppLanguage() === "ru" ? "Язык интерфейса можно изменить позднее" : "可在设置中更改 · Change in Settings"}
+        </span>
       </div>
     </div>
   );

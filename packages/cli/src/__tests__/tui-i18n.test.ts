@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveTuiLocale } from "../tui/i18n.js";
+import { getTuiCopy, resolveTuiLocale } from "../tui/i18n.js";
 
 describe("tui i18n", () => {
   it("defaults to Chinese and supports explicit English override", () => {
@@ -7,5 +7,7 @@ describe("tui i18n", () => {
     expect(resolveTuiLocale({ INKOS_TUI_LOCALE: "en" })).toBe("en");
     expect(resolveTuiLocale({ LANG: "en_US.UTF-8" })).toBe("en");
     expect(resolveTuiLocale({}, "en")).toBe("en");
+    expect(resolveTuiLocale({ INKOS_TUI_LOCALE: "ru-RU" })).toBe("ru-RU");
+    expect(getTuiCopy("ru-RU").labels.project).toBe("Проект");
   });
 });

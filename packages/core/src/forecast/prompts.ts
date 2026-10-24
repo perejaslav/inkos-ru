@@ -12,6 +12,9 @@ export interface ForecastPromptInput {
 }
 
 export function buildForecastSystemPrompt(language: ForecastLanguage): string {
+  if (language === "ru") {
+    return "Предложи несколько независимых вариантов будущего сюжета на русском языке. Используй активированный Skill для длинных произведений. Каждый вариант не является каноном. Сохраняй установленные факты и явно отмечай риски противоречий.";
+  }
   return language === "en"
     ? "Project mutually isolated, non-canonical futures with the activated long-writing Skill. Preserve canon and surface conflicts as risks."
     : "按已激活的长篇写作 Skill 推演相互隔离的非正史候选未来。保留正典，把冲突明确列为风险。";
@@ -19,6 +22,20 @@ export function buildForecastSystemPrompt(language: ForecastLanguage): string {
 
 export function buildForecastUserPrompt(input: ForecastPromptInput, language: ForecastLanguage): string {
   const firstChapter = input.baseChapter + 1;
+  if (language === "ru") {
+    return [
+      input.contextMarkdown,
+      "",
+      "## Точка расхождения",
+      "",
+      input.divergence,
+      "",
+      "## Требования к результату",
+      "",
+      `Количество независимых вариантов развития сюжета: строго ${input.branchCount}. Каждый вариант охватывает примерно ${input.horizon} будущих глав, начиная с главы ${firstChapter}.`,
+      "Все описания и названия вариантов пиши по-русски. Передай полный набор через инструмент результата.",
+    ].join("\n");
+  }
   if (language === "en") {
     return [
       input.contextMarkdown,
@@ -48,6 +65,12 @@ export function buildForecastUserPrompt(input: ForecastPromptInput, language: Fo
 }
 
 export function buildForecastRepairPrompt(validationError: string, language: ForecastLanguage): string {
+  if (language === "ru") {
+    return [
+      `Предыдущий результат не прошёл проверку: ${validationError}`,
+      "Исправь ошибки и повторно передай полный набор вариантов на русском языке через инструмент результата.",
+    ].join("\n");
+  }
   if (language === "en") {
     return [
       `Your previous output failed validation: ${validationError}`,

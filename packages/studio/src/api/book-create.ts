@@ -24,7 +24,7 @@ export interface StudioBookConfigDraft {
   readonly chapterWordCount: number;
   readonly minChapterLength?: number;
   readonly maxChapterLength?: number;
-  readonly language: "zh" | "en";
+  readonly language: "zh" | "en" | "ru";
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -35,11 +35,10 @@ export function normalizeStudioPlatform(platform?: string): Platform {
 
 export function buildStudioBookConfig(body: StudioCreateBookBody, now: string): StudioBookConfigDraft {
   const language = normalizeContentLanguage(body.language ?? "zh");
-  if (language === "ru") throw new Error("Russian book creation is not yet supported by the full writing pipeline.");
   return {
     id: body.title
       .toLowerCase()
-      .replace(/[^a-z0-9\u4e00-\u9fff]/g, "-")
+      .replace(/[^a-z0-9\u4e00-\u9fff\u0400-\u052f]/g, "-")
       .replace(/-+/g, "-")
       .slice(0, 30),
     title: body.title,

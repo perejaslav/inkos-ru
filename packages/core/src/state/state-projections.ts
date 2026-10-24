@@ -10,8 +10,13 @@ export function renderHooksProjection(
   options?: { readonly currentChapter?: number },
 ): string {
   void options;
-  const title = language === "en" ? "# Pending Hooks" : "# 伏笔池";
-  const headers = language === "en"
+  const title = language === "ru" ? "# Незавершённые сюжетные линии" : language === "en" ? "# Pending Hooks" : "# 伏笔池";
+  const headers = language === "ru"
+    ? [
+      "| hook_id | начало | тип | статус | последнее развитие | ожидаемая развязка | примечания |",
+      "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    : language === "en"
     ? [
       "| hook_id | start_chapter | type | status | last_advanced_chapter | expected_payoff | notes |",
       "| --- | --- | --- | --- | --- | --- | --- |",
@@ -46,8 +51,13 @@ export function renderChapterSummariesProjection(
   state: ChapterSummariesState,
   language: "zh" | "en" | "ru" = "zh",
 ): string {
-  const title = language === "en" ? "# Chapter Summaries" : "# 章节摘要";
-  const headers = language === "en"
+  const title = language === "ru" ? "# Краткое содержание глав" : language === "en" ? "# Chapter Summaries" : "# 章节摘要";
+  const headers = language === "ru"
+    ? [
+      "| Глава | Название | Персонажи | События | Изменения состояния | Сюжетные линии | Настроение | Тип главы |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    : language === "en"
     ? [
       "| Chapter | Title | Characters | Key Events | State Changes | Hook Activity | Mood | Chapter Type |",
       "| --- | --- | --- | --- | --- | --- | --- | --- |",
@@ -79,9 +89,14 @@ export function renderCurrentStateProjection(
   state: CurrentStateState,
   language: "zh" | "en" | "ru" = "zh",
 ): string {
-  const title = language === "en" ? "# Current State" : "# 当前状态";
-  const chapterLabel = language === "en" ? "Current chapter" : "当前章节";
-  const headers = language === "en"
+  const title = language === "ru" ? "# Текущее состояние" : language === "en" ? "# Current State" : "# 当前状态";
+  const chapterLabel = language === "ru" ? "Текущая глава" : language === "en" ? "Current chapter" : "当前章节";
+  const headers = language === "ru"
+    ? [
+        "| Субъект | Связь / свойство | Объект | Действует с главы | Исходная глава |",
+        "| --- | --- | --- | --- | --- |",
+      ]
+    : language === "en"
     ? [
         "| Subject | Predicate | Object | Valid from | Source chapter |",
         "| --- | --- | --- | --- | --- |",

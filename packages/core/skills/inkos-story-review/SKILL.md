@@ -16,3 +16,4 @@ Use this skill when the user wants diagnosis, comparison, review, or revision ad
 - Respond in the user's language.
 
 Load `references/review-matrix.md` for a full review or when standards are disputed. The matrix is qualitative guidance, not a scorecard. For spinoffs, use parent canon as authority; for fanfic, honor `fanficMode` and explicit allowed deviations.
+For Russian manuscripts, load references/russian-review.md.

@@ -49,24 +49,29 @@ export class ReviserAgent extends BaseAgent {
     if (!options) throw new Error("Reviser requires governed context and language.");
     const body=(content:string)=>options.chapterTitle===undefined?content:chapterDocumentBody(content,chapterNumber,options.chapterTitle,options.language);
     chapterContent=body(chapterContent);
-    const isEnglish = options.language === "en";
+    const isRussian = options.language === "ru";
+    const isEnglish = options.language !== "zh";
     const observationList = observations.length > 0
       ? observations.map((issue) => [
           `- ${issue.code}: ${issue.summary}`,
           ...(issue.evidence.length > 0
-            ? [`  ${isEnglish ? "Evidence" : "证据"}: ${issue.evidence.join("; ")}`]
+            ? [`  ${isRussian ? "Доказательства" : isEnglish ? "Evidence" : "证据"}: ${issue.evidence.join("; ")}`]
             : []),
         ].join("\n")).join("\n")
-      : (isEnglish ? "- Follow the user's explicit revision instruction in the governed context." : "- 按 governed context 中的用户明确修订要求执行。");
+      : (isRussian ? "- Выполни прямое указание автора из управляемого контекста." : isEnglish ? "- Follow the user's explicit revision instruction in the governed context." : "- 按 governed context 中的用户明确修订要求执行。");
     const context = renderNarrativeSelectedContext(options.contextPackage.selectedContext, options.language);
     const lengthBlock = options.lengthSpec
-      ? (isEnglish
+      ? (isRussian
+          ? `\n## Требования к объёму\n${JSON.stringify({...options.lengthSpec,currentCount:countChapterLength(chapterContent,options.lengthSpec.countingMode),unit:"слова"})}`
+          : isEnglish
           ? `\n## Length contract\n${JSON.stringify({...options.lengthSpec,currentCount:countChapterLength(chapterContent,options.lengthSpec.countingMode),unit:"words"})}`
           : `\n## 篇幅要求\n${JSON.stringify({...options.lengthSpec,currentCount:countChapterLength(chapterContent,options.lengthSpec.countingMode),unit:"正文非空白字符，含标点，不含标题"})}`)
       : "";
     const systemPrompt = buildRevisionProtocol(mode, options.language);
     const source=mode==='spot-fix'?numberReviewSource(chapterContent):chapterContent;
-    const userPrompt = isEnglish
+    const userPrompt = isRussian
+      ? `Отредактируй главу ${chapterNumber} по-русски.\n\n## Замечания или указание автора\n${observationList}\n\n## Управляемый контекст\n${context}${lengthBlock}\n\n## Текущий текст главы\n${source}`
+      : isEnglish
       ? `Revise chapter ${chapterNumber}.\n\n## Observations or instruction\n${observationList}\n\n## Governed context\n${context}${lengthBlock}\n\n## Current chapter\n${source}`
       : `修订第${chapterNumber}章。\n\n## 观察或用户指令\n${observationList}\n\n## 权威上下文\n${context}${lengthBlock}\n\n## 当前章节\n${source}`;
     const messages = [

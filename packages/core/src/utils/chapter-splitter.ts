@@ -3,13 +3,13 @@ export interface SplitChapter {
   readonly content: string;
 }
 
-const NUMBERED_HEADING = /^#{0,6}\s*(?:第([零〇○Ｏ０一二三四五六七八九十百千万\d]+)(章|回)(?:[:：]|\s+)?\s*(.*)|Chapter\s+(\d+|[IVXLCDM]+)[.:]?\s*(.*))$/i;
+const NUMBERED_HEADING = /^#{0,6}\s*(?:第([零〇○Ｏ０一二三四五六七八九十百千万\d]+)(章|回)(?:[:：]|\s+)?\s*(.*)|Chapter\s+(\d+|[IVXLCDM]+)[.:]?\s*(.*)|Глава\s+(\d+)[.:]?\s*(.*))$/i;
 
 /** Numbered document syntax shared by persistence, export and import. */
-export function readChapterHeading(line: string): {number:number;title:string;language:'zh'|'en'} | undefined {
+export function readChapterHeading(line: string): {number:number;title:string;language:'zh'|'en'|'ru'} | undefined {
   const match=NUMBERED_HEADING.exec(line.trim());
   if(!match)return undefined;
-  const ordinal=match[1]??match[4]!;
+  const ordinal=match[1]??match[4]??match[6]!;
   let number=Number(ordinal);
   if(!Number.isFinite(number)){
     if(match[4]){
@@ -30,7 +30,7 @@ export function readChapterHeading(line: string): {number:number;title:string;la
     }
   }
   if(!Number.isSafeInteger(number)||number<0)return undefined;
-  return{number,title:(match[3]??match[5]??'').trim(),language:match[1]?'zh':'en'};
+  return{number,title:(match[3]??match[5]??match[7]??'').trim(),language:match[1]?'zh':match[6]?'ru':'en'};
 }
 
 /**

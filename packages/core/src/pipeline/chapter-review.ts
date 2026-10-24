@@ -67,12 +67,14 @@ export async function reviewChapterDraft(params: {
       unavailable: true,
       observations: [{
         code: "review-unavailable",
-        summary: isEnglish
+        summary: params.lengthSpec.countingMode === "ru_words"
+          ? `Проверка главы недоступна: ${String(error)}`
+          : isEnglish
           ? `Review observation was unavailable: ${String(error)}`
           : `审稿观察暂不可用：${String(error)}`,
         evidence: [],
       }],
-      summary: isEnglish ? "Review unavailable" : "审稿暂不可用",
+      summary: params.lengthSpec.countingMode === "ru_words" ? "Проверка главы недоступна" : isEnglish ? "Review unavailable" : "审稿暂不可用",
     };
   }
   return {

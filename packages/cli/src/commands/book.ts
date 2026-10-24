@@ -1,3 +1,4 @@
+import { normalizeContentLanguage } from "@actalk/inkos-core";
 import { Command } from "commander";
 import { access, readFile, rm } from "node:fs/promises";
 import { createInterface } from "node:readline";
@@ -69,7 +70,7 @@ bookCommand
         status: "outlining",
         targetChapters: parseInt(opts.targetChapters, 10),
         chapterWordCount: parseInt(opts.chapterWords, 10),
-        language: resolveCliLanguage(opts.lang ?? config.language),
+        language: normalizeContentLanguage(opts.lang ?? config.language),
         createdAt: now,
         updatedAt: now,
       };

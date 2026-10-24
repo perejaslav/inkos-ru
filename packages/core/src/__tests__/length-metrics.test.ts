@@ -13,8 +13,9 @@ describe("length metrics", () => {
   it("counts Russian Cyrillic words and ignores Markdown metadata", () => {
     const prose = "---\ntitle: Пролог\n---\n# Глава первая\n\nМальчик медленно открыл дверь.";
     expect(countChapterLength(prose, "ru_words")).toBe(4);
-    expect(countChapterLength("Ёж и ёжик. По-русски — 50-летний герой.", "ru_words")).toBeGreaterThan(4);
-    expect(countChapterLength("Санкт-Петербург и New York", "ru_words")).toBeGreaterThan(0);
+    expect(countChapterLength("Ёж и ёжик. По-русски — 50-летний герой.", "ru_words")).toBe(6);
+    expect(countChapterLength("Санкт-Петербург и New York", "ru_words")).toBe(4);
+    expect(countChapterLength("из-за т. д. и 50-летний", "ru_words")).toBe(5);
   });
 
   it("resolves Russian word counting without changing zh/en", () => {

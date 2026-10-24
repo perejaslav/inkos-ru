@@ -5,6 +5,7 @@ import { usePreferencesStore } from "../store/preferences";
 import type { Theme } from "../hooks/use-theme";
 import type { TFunction } from "../hooks/use-i18n";
 import { useColors } from "../hooks/use-colors";
+import { getAppLanguage, setPreferredUiLanguage, tr, type AppLanguage } from "../lib/app-language";
 import {
   buildDetectionConfig,
   buildNotifyChannel,
@@ -89,6 +90,7 @@ const fieldClass = "w-full rounded-lg border border-border bg-secondary/30 px-3 
 export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFunction }) {
   const c = useColors(theme);
   const isZh = t("nav.connected") === "\u5DF2\u8FDE\u63A5";
+  const isRu = getAppLanguage() === "ru";
   const { data: overridesData, refetch: refetchOverrides } = useApi<{ overrides: Record<string, unknown> }>("/project/model-overrides");
   const { data: defaultModelData, refetch: refetchDefaultModel } = useApi<{ service: string | null; defaultModel: string | null }>("/project/default-model");
   const { data: researchSearchData, refetch: refetchResearchSearch } = useApi<{ researchSearch: Partial<ResearchSearchDraft> }>("/project/research-search");
@@ -165,7 +167,7 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
       const serialized = await serializeSkillFolder(files);
       await postApi("/skills/import", { files: serialized });
       await refetchSkills();
-    }, isZh ? "Skill 文件夹已导入" : "Skill folder imported");
+    }, tr("Skill 文件夹已导入", "Skill folder imported", "Папка навыков импортирована"));
   };
 
   const updateChannel = (index: number, patch: Partial<NotifyChannelDraft>) => {
@@ -202,6 +204,23 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
         </div>
       )}
 
+      <SettingsCard
+        title={t("settings.interfaceLanguage")}
+        description={t("settings.interfaceLanguageHint")}
+        icon={<Settings2 size={18} />}
+      >
+        <select
+          className={fieldClass}
+          aria-label={t("settings.interfaceLanguage")}
+          value={getAppLanguage()}
+          onChange={(event) => setPreferredUiLanguage(event.target.value as AppLanguage)}
+        >
+          <option value="zh">中文</option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+        </select>
+      </SettingsCard>
+
       {/* Chat UI preferences — applied immediately, persisted in this browser's localStorage */}
       <SettingsCard title={t("settings.chatUi")} description={t("settings.chatUiHint")} icon={<MessageSquare size={18} />}>
         <label className="flex items-center gap-2 text-sm">
@@ -217,27 +236,29 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
 
       <SettingsCard
         title={isZh ? "Agent Skills" : "Agent Skills"}
-        description={isZh ? "导入标准 SKILL.md 专业能力包。Chat 可以按意图自主使用，也可以在输入框用 + 号强制启用。" : "Import standard SKILL.md expertise packages. Chat can choose a skill from intent, or you can force one from the + menu."}
+        description={tr("导入标准 SKILL.md 专业能力包。Chat 可以按意图自主使用，也可以在输入框用 + 号强制启用。", "Import standard SKILL.md expertise packages. Chat can choose a skill from intent, or you can force one from the + menu.", "Импортируйте пакеты навыков SKILL.md. Агент выбирает их по запросу, либо вы можете выбрать навык через + в чате.")}
         icon={<Bot size={18} />}
       >
         <div className="space-y-3">
           {skillsData?.diagnostics?.length ? (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-              <div className="font-semibold">{isZh ? "部分外部 Skill 未加载" : "Some external skills were not loaded"}</div>
+              <div className="font-semibold">{tr("部分外部 Skill 未加载", "Some external skills were not loaded", "Некоторые внешние навыки не загружены")}</div>
               {skillsData.diagnostics.slice(0, 8).map((item, index) => (
                 <div key={`${item.path ?? "skill"}-${index}`} className="mt-1 break-all">
-                  {item.path ? `${item.path}: ` : ""}{item.message ?? (isZh ? "格式无效" : "Invalid format")}
+                  {item.path ? `${item.path}: ` : ""}{item.message ?? tr("格式无效", "Invalid format", "Недопустимый формат")}
                 </div>
               ))}
             </div>
           ) : null}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 bg-secondary/20 p-3">
             <div>
-              <div className="text-sm font-semibold">{isZh ? "导入外部 Skill" : "Import external skill"}</div>
+              <div className="text-sm font-semibold">{tr("导入外部 Skill", "Import external skill", "Импорт внешнего навыка")}</div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {isZh
-                  ? "兼容 AgentSkills / OpenClaw：选择包含 SKILL.md 的完整文件夹，静态参考资料会一并导入；脚本不会自动执行。"
-                  : "AgentSkills / OpenClaw compatible: select a complete folder containing SKILL.md. Static references are imported; scripts are never auto-executed."}
+                {tr(
+                  "兼容 AgentSkills / OpenClaw：选择包含 SKILL.md 的完整文件夹，静态参考资料会一并导入；脚本不会自动执行。",
+                  "AgentSkills / OpenClaw compatible: select a complete folder containing SKILL.md. Static references are imported; scripts are never auto-executed.",
+                  "Совместимо с AgentSkills / OpenClaw. Выберите папку с SKILL.md и материалами. Скрипты не запускаются автоматически.",
+                )}
               </p>
             </div>
             <button
@@ -248,8 +269,8 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
             >
               <FolderUp size={16} />
               {saving === "skill-import"
-                ? (isZh ? "导入中..." : "Importing...")
-                : (isZh ? "选择 Skill 文件夹" : "Choose skill folder")}
+                ? tr("导入中...", "Importing...", "Импорт...")
+                : tr("选择 Skill 文件夹", "Choose skill folder", "Выбрать папку с навыком")}
             </button>
             <input
               ref={skillFolderInputRef}
@@ -264,7 +285,7 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
             />
           </div>
           {skills.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">{isZh ? "还没有 Skill。" : "No skills yet."}</p>
+            <p className="text-xs text-muted-foreground italic">{tr("还没有 Skill。", "No skills yet.", "Навыков пока нет.")}</p>
           ) : (
             <div className="grid gap-2 md:grid-cols-2">
               {skills.map((skill) => (
@@ -278,7 +299,7 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
                         </span>
                       </div>
                       <div className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">@{skill.id}</div>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{skill.description || (isZh ? "无说明" : "No description")}</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{skill.description || tr("无说明", "No description", "Без описания")}</p>
                     </div>
                     {skill.editable ? (
                       <button
@@ -286,9 +307,9 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
                         onClick={() => runSave(`delete-skill:${skill.id}`, async () => {
                           await fetchJson(`/skills/${encodeURIComponent(skill.id)}`, { method: "DELETE" });
                           await refetchSkills();
-                        }, isZh ? "Skill 已删除" : "Skill deleted")}
+                        }, tr("Skill 已删除", "Skill deleted", "Навык удалён"))}
                         className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        aria-label={isZh ? `删除 ${skill.name}` : `Delete ${skill.name}`}
+                        aria-label={isRu ? `Удалить ${skill.name}` : isZh ? `删除 ${skill.name}` : `Delete ${skill.name}`}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -396,8 +417,8 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
       </SettingsCard>
 
       <SettingsCard
-        title={isZh ? "联网研究搜索服务" : "Research Search Provider"}
-        description={isZh ? "给 research_web 配置外部搜索 API。未配置时仍可用服务器环境变量 TAVILY_API_KEY 作为兜底。" : "Configure the external search API used by research_web. If unset, the server may still use TAVILY_API_KEY as a fallback."}
+        title={tr("联网研究搜索服务", "Research Search Provider", "Внешний поиск для исследований")}
+        description={tr("给 research_web 配置外部搜索 API。未配置时仍可用服务器环境变量 TAVILY_API_KEY 作为兜底。", "Configure the external search API used by research_web. If unset, the server may still use TAVILY_API_KEY as a fallback.", "Настройте внешний поисковый API для research_web. Если он не задан, используется переменная среды TAVILY_API_KEY.")}
         icon={<Search size={18} />}
       >
         <label className="flex items-center gap-2 text-sm">
@@ -406,12 +427,12 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
             checked={researchSearch.enabled}
             onChange={(e) => setResearchSearch((prev) => ({ ...prev, enabled: e.target.checked }))}
           />
-          {isZh ? "启用项目级搜索配置" : "Enable project-level search config"}
+          {tr("启用项目级搜索配置", "Enable project-level search config", "Включить настройки поиска для проекта")}
         </label>
         <Collapse open={researchSearch.enabled}>
           <div className="grid gap-2 pt-1 md:grid-cols-2">
             <label className="space-y-1 text-xs text-muted-foreground">
-              <span>{isZh ? "搜索服务" : "Provider"}</span>
+              <span>{t("config.provider")}</span>
               <select
                 value={researchSearch.provider}
                 onChange={(e) => setResearchSearch((prev) => ({ ...prev, provider: e.target.value === "custom" ? "custom" : "tavily" }))}
@@ -422,7 +443,7 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
               </select>
             </label>
             <label className="space-y-1 text-xs text-muted-foreground">
-              <span>{isZh ? "API Key 环境变量名" : "API key env var"}</span>
+              <span>{t("settings.detectionApiKeyEnv")}</span>
               <input
                 value={researchSearch.apiKeyEnv}
                 onChange={(e) => setResearchSearch((prev) => ({ ...prev, apiKeyEnv: e.target.value }))}
@@ -431,7 +452,7 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
               />
             </label>
             <label className="space-y-1 text-xs text-muted-foreground md:col-span-2">
-              <span>{isZh ? "Base URL（可选，自定义兼容端点）" : "Base URL (optional custom compatible endpoint)"}</span>
+              <span>{tr("Base URL（可选，自定义兼容端点）", "Base URL (optional custom compatible endpoint)", "Базовый URL (необязательно, для совместимого API)")}</span>
               <input
                 value={researchSearch.baseUrl}
                 onChange={(e) => setResearchSearch((prev) => ({ ...prev, baseUrl: e.target.value }))}
@@ -440,12 +461,12 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
               />
             </label>
             <label className="space-y-1 text-xs text-muted-foreground md:col-span-2">
-              <span>{isZh ? "API Key（可选；留空则读环境变量）" : "API key (optional; leave blank to use env var)"}</span>
+              <span>{tr("API Key（可选；留空则读环境变量）", "API key (optional; leave blank to use env var)", "Ключ API (необязательно, можно взять из переменной среды)")}</span>
               <input
                 value={researchSearch.apiKey}
                 onChange={(e) => setResearchSearch((prev) => ({ ...prev, apiKey: e.target.value }))}
                 type="password"
-                placeholder={isZh ? "可直接填 key，或只填环境变量名" : "Paste key, or use env var only"}
+                placeholder={tr("可直接填 key，或只填环境变量名", "Paste key, or use env var only", "Вставьте ключ или укажите переменную среды")}
                 className={`${fieldClass} font-mono`}
               />
             </label>

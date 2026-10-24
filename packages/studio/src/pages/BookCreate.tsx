@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BookPlus, CheckCircle2 } from "lucide-react";
 import { fetchJson, useApi } from "../hooks/use-api";
 import type { Theme } from "../hooks/use-theme";
 import type { TFunction } from "../hooks/use-i18n";
 import { useColors } from "../hooks/use-colors";
+import { getAppLanguage } from "../lib/app-language";
+
+export type BookLanguage = "zh" | "en" | "ru";
 
 interface Nav {
   toDashboard: () => void;
@@ -28,7 +31,7 @@ export interface BookCreatePayload {
   readonly title: string;
   readonly genre: string;
   readonly platform: string;
-  readonly language: "zh" | "en";
+  readonly language: BookLanguage;
   readonly targetChapters: number;
   readonly chapterWordCount: number;
   readonly blurb: string;
@@ -37,6 +40,8 @@ export interface BookCreatePayload {
 interface PlatformCopy {
   readonly heading: string;
   readonly hint: string;
+  readonly languageLabel: string;
+  readonly languageHint: string;
   readonly titleLabel: string;
   readonly titlePlaceholder: string;
   readonly genreLabel: string;
@@ -66,10 +71,18 @@ const PLATFORMS_EN: ReadonlyArray<PlatformOption> = [
   { value: "other", label: "Other" },
 ];
 
-const PAGE_COPY: Record<"zh" | "en", PlatformCopy> = {
+const PLATFORMS_RU: ReadonlyArray<PlatformOption> = [
+  { value: "other", label: "Другая платформа / самостоятельная публикация" },
+  { value: "royal-road", label: "Royal Road" },
+  { value: "kindle-unlimited", label: "Kindle Unlimited" },
+];
+
+const PAGE_COPY: Record<BookLanguage, PlatformCopy> = {
   zh: {
     heading: "创建长篇 Work",
     hint: "这里提交的是明确建书动作。想先讨论和完善方向，请回到 Studio Chat 自然交流，确认卡会携带同一份结构化建书参数。",
+    languageLabel: "作品语言",
+    languageHint: "作品语言与 Studio 界面语言无关。",
     titleLabel: "书名",
     titlePlaceholder: "例如：夜港账本",
     genreLabel: "题材 / 类型",
@@ -87,6 +100,8 @@ const PAGE_COPY: Record<"zh" | "en", PlatformCopy> = {
   en: {
     heading: "Create a long-form Work",
     hint: "This surface submits an explicit creation action. Use Studio Chat to discuss the direction first; its confirmation card carries the same typed creation parameters.",
+    languageLabel: "Book language",
+    languageHint: "Sets the writing language, independently of the Studio interface.",
     titleLabel: "Title",
     titlePlaceholder: "Example: Ledger of the Night Port",
     genreLabel: "Genre",
@@ -101,21 +116,44 @@ const PAGE_COPY: Record<"zh" | "en", PlatformCopy> = {
     creationStatus: "Creating the Work. Its workspace will open when the artifact is ready.",
     creationSteps: ["Saving Work config", "Generating foundation", "Registering artifacts"],
   },
+  ru: {
+    heading: "Создать роман",
+    hint: "Создайте произведение с заданными параметрами. Для обсуждения идеи и структуры можно использовать чат Studio.",
+    languageLabel: "Язык книги",
+    languageHint: "Определяет язык текста книги. Язык интерфейса Studio на него не влияет.",
+    titleLabel: "Название книги",
+    titlePlaceholder: "Например: Тайны ночного порта",
+    genreLabel: "Жанр",
+    genrePlaceholder: "Например: детектив, фантастика, фэнтези",
+    platformLabel: "Площадка для публикации",
+    targetChaptersLabel: "Плановое число глав",
+    chapterWordCountLabel: "Слов в одной главе",
+    briefLabel: "Сюжет и основные идеи",
+    briefPlaceholder: "Опишите мир, главного героя, его цель, конфликт и начало сюжета.",
+    createBook: "Создать книгу",
+    creatingBook: "Создание…",
+    creationStatus: "Создаётся проект книги. После подготовки откроется рабочая область.",
+    creationSteps: ["Сохранение настроек", "Создание основы сюжета", "Регистрация материалов"],
+  },
 };
 
 export function pickValidValue(current: string, available: ReadonlyArray<string>): string {
   return current && available.includes(current) ? current : available[0] ?? "";
 }
 
-export function defaultChapterWordsForLanguage(language: "zh" | "en"): string {
-  return language === "en" ? "2000" : "3000";
+export function normalizeBookCreateLanguage(language?: string): BookLanguage {
+  return language === "ru" ? "ru" : language === "en" ? "en" : "zh";
 }
 
-export function platformOptionsForLanguage(language: "zh" | "en"): ReadonlyArray<PlatformOption> {
-  return language === "en" ? PLATFORMS_EN : PLATFORMS_ZH;
+export function defaultChapterWordsForLanguage(language: BookLanguage): string {
+  return language === "zh" ? "3000" : "2000";
 }
 
-export function defaultBookCreateForm(language: "zh" | "en"): BookCreateFormState {
+export function platformOptionsForLanguage(language: BookLanguage): ReadonlyArray<PlatformOption> {
+  return language === "ru" ? PLATFORMS_RU : language === "en" ? PLATFORMS_EN : PLATFORMS_ZH;
+}
+
+export function defaultBookCreateForm(language: BookLanguage): BookCreateFormState {
   return {
     title: "",
     genre: "",
@@ -123,6 +161,21 @@ export function defaultBookCreateForm(language: "zh" | "en"): BookCreateFormStat
     targetChapters: "200",
     chapterWordCount: defaultChapterWordsForLanguage(language),
     brief: "",
+  };
+}
+
+/** Update language-dependent defaults without overwriting author-supplied chapter length. */
+export function adaptBookCreateFormForLanguage(
+  form: BookCreateFormState,
+  previousLanguage: BookLanguage,
+  nextLanguage: BookLanguage,
+): BookCreateFormState {
+  return {
+    ...form,
+    platform: pickValidValue(form.platform, platformOptionsForLanguage(nextLanguage).map((option) => option.value)),
+    chapterWordCount: form.chapterWordCount === defaultChapterWordsForLanguage(previousLanguage)
+      ? defaultChapterWordsForLanguage(nextLanguage)
+      : form.chapterWordCount,
   };
 }
 
@@ -142,11 +195,11 @@ export function isBookCreateFormReady(form: BookCreateFormState): boolean {
   );
 }
 
-export function buildBookCreatePayload(form: BookCreateFormState, language: "zh" | "en"): BookCreatePayload {
+export function buildBookCreatePayload(form: BookCreateFormState, language: BookLanguage): BookCreatePayload {
   const targetChapters = parsePositiveInteger(form.targetChapters);
   const chapterWordCount = parsePositiveInteger(form.chapterWordCount);
   if (!targetChapters || !chapterWordCount || !isBookCreateFormReady(form)) {
-    throw new Error(language === "zh" ? "请先补齐建书表单。" : "Complete the book creation form first.");
+    throw new Error(language === "ru" ? "Заполните все обязательные поля." : language === "zh" ? "请先补齐建书表单。" : "Complete the book creation form first.");
   }
   return {
     title: form.title.trim(),
@@ -201,21 +254,23 @@ export async function waitForBookReady(bookId: string, options: WaitForBookReady
 export function BookCreate({ nav, theme, t: _t }: { nav: Nav; theme: Theme; t: TFunction }) {
   const c = useColors(theme);
   const { data: project } = useApi<{ language: string }>("/project");
-  const projectLang = project?.language === "en" ? "en" : "zh";
-  const copy = PAGE_COPY[projectLang];
-  const platformChoices = platformOptionsForLanguage(projectLang);
-  const [form, setForm] = useState<BookCreateFormState>(() => defaultBookCreateForm(projectLang));
+  const projectLang = normalizeBookCreateLanguage(project?.language);
+  const [languageOverride, setLanguageOverride] = useState<BookLanguage | null>(null);
+  const bookLang = languageOverride ?? projectLang;
+  const copy = PAGE_COPY[getAppLanguage()];
+  const platformChoices = platformOptionsForLanguage(bookLang);
+  const [form, setForm] = useState<BookCreateFormState>(() => defaultBookCreateForm(bookLang));
+  const previousBookLang = useRef(bookLang);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    setForm((current) => ({
-      ...current,
-      platform: pickValidValue(current.platform, platformOptionsForLanguage(projectLang).map((option) => option.value)),
-      chapterWordCount: current.chapterWordCount || defaultChapterWordsForLanguage(projectLang),
-    }));
-  }, [projectLang]);
+    if (previousBookLang.current === bookLang) return;
+    const oldLanguage = previousBookLang.current;
+    previousBookLang.current = bookLang;
+    setForm((current) => adaptBookCreateFormForLanguage(current, oldLanguage, bookLang));
+  }, [bookLang]);
 
   const updateForm = (patch: Partial<BookCreateFormState>) => setForm((current) => ({ ...current, ...patch }));
 
@@ -228,9 +283,11 @@ export function BookCreate({ nav, theme, t: _t }: { nav: Nav; theme: Theme; t: T
       const data = await fetchJson<{ bookId?: string }>("/books/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildBookCreatePayload(form, projectLang)),
+        body: JSON.stringify(buildBookCreatePayload(form, bookLang)),
       });
-      if (!data.bookId) throw new Error(projectLang === "zh" ? "创建动作没有返回 Work ID。" : "Creation did not return a Work ID.");
+      if (!data.bookId) throw new Error(getAppLanguage() === "ru"
+        ? "Сервер не вернул идентификатор созданной книги."
+        : getAppLanguage() === "zh" ? "创建动作没有返回 Work ID。" : "Creation did not return a Work ID.");
       await waitForBookReady(data.bookId);
       nav.toBook(data.bookId);
     } catch (cause) {
@@ -249,6 +306,20 @@ export function BookCreate({ nav, theme, t: _t }: { nav: Nav; theme: Theme; t: T
           <p className="max-w-3xl text-sm leading-7 text-muted-foreground">{copy.hint}</p>
         </header>
         <section className="space-y-5 rounded-xl border border-border/60 bg-card/80 p-6">
+          <label className="block space-y-2">
+            <span className="text-xs font-medium text-muted-foreground">{copy.languageLabel}</span>
+            <select
+              aria-label={copy.languageLabel}
+              value={bookLang}
+              onChange={(event) => setLanguageOverride(normalizeBookCreateLanguage(event.target.value))}
+              className={`w-full ${c.input} rounded-md bg-background px-3 py-2.5 text-sm focus:outline-none`}
+            >
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+              <option value="ru">Русский</option>
+            </select>
+            <p className="text-xs text-muted-foreground">{copy.languageHint}</p>
+          </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-2">
               <span className="text-xs font-medium text-muted-foreground">{copy.titleLabel}</span>

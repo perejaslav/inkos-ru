@@ -35,6 +35,19 @@ describe("LocalSearchIndex", () => {
     }
   });
 
+  it("finds Russian ё/е variants without changing stored source", () => {
+    const index = new LocalSearchIndex(":memory:");
+    try {
+      index.replaceScope("story", [{
+        id: "yozh", scope: "story", kind: "reference", source: "canon.md",
+        title: "Ёжик", body: "Ёж ждал у северной пристани.",
+      }]);
+      expect(index.search("еж", { scope: "story" })[0]?.id).toBe("yozh");
+      expect(index.search("ёж", { scope: "story" })[0]?.body).toContain("Ёж");
+    } finally {
+      index.close();
+    }
+  });
   it("replaces stale projection rows instead of retaining old evidence", () => {
     const index = new LocalSearchIndex(":memory:");
     try {

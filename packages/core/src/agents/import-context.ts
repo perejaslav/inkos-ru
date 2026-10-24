@@ -15,7 +15,9 @@ export function renderCompleteImportSource(
   chapters: ReadonlyArray<ImportedChapterSource>,
   language: "zh" | "en" | "ru",
 ): string {
-  return chapters.map((chapter, index) => language === "en"
+  return chapters.map((chapter, index) => language === "ru"
+    ? `Глава ${index + 1}. ${chapter.title}\n\n${chapter.content}`
+    : language === "en"
     ? `Chapter ${index + 1}: ${chapter.title}\n\n${chapter.content}`
     : `第${index + 1}章 ${chapter.title}\n\n${chapter.content}`)
     .join("\n\n---\n\n");
@@ -49,7 +51,9 @@ export async function compileImportSource(input: {
     const response = await runWorkerAgent(input.client, input.model, await prepareWorkerMessages({ ...input, activatedSkills: mergeActivatedSkillGuidance(input.activeSkills ?? [], skills) }, [
       {
         role: "system",
-        content: input.language === "en"
+        content: input.language === "ru"
+          ? "Обработай полный фрагмент источника по активированным Skills импорта и продолжения. Верни проверяемый Markdown по-русски."
+          : input.language === "en"
           ? "Apply the activated import and continuation Skills to this complete source chunk. Return traceable Markdown only."
           : "按已激活的导入与续写 Skill 处理这份完整源片段，只返回可追溯 Markdown。",
       },
@@ -60,16 +64,18 @@ export async function compileImportSource(input: {
     });
     const body = response.content.trim();
     if (!body) throw new Error(`Import context compiler returned empty output for chunk ${index + 1}/${chunks.length}.`);
-    compiled.push(`## ${input.language === "en" ? "Compiled source chunk" : "编译源片段"} ${index + 1}/${chunks.length}\n\n${body}`);
+    compiled.push(`## ${input.language === "ru" ? "Обработанный фрагмент" : input.language === "en" ? "Compiled source chunk" : "编译源片段"} ${index + 1}/${chunks.length}\n\n${body}`);
   }
-  const catalog = input.chapters.map((chapter, index) => input.language === "en"
+  const catalog = input.chapters.map((chapter, index) => input.language === "ru"
+    ? `- Глава ${index + 1}: ${chapter.title}`
+    : input.language === "en"
     ? `- Chapter ${index + 1}: ${chapter.title}`
     : `- 第${index + 1}章：${chapter.title}`).join("\n");
   return {
     markdown: [
-      input.language === "en" ? "# Compiled import context" : "# 编译后的导入上下文",
+      input.language === "ru" ? "# Обработанный контекст импорта" : input.language === "en" ? "# Compiled import context" : "# 编译后的导入上下文",
       "",
-      input.language === "en" ? "## Complete chapter catalog" : "## 完整章节目录",
+      input.language === "ru" ? "## Полный список глав" : input.language === "en" ? "## Complete chapter catalog" : "## 完整章节目录",
       catalog,
       "",
       ...compiled,

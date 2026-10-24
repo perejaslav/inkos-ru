@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { saveStoryGraph, StoryGraphSchema } from "@actalk/inkos-core";
+import { createWorkManifest, saveWorkManifest, saveStoryGraph, StoryGraphSchema } from "@actalk/inkos-core";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,6 +21,9 @@ function makeGraph(projectId: string, title: string) {
 }
 
 test.beforeAll(async () => {
+  for (const [id, title] of [[FILM_A_ID, "Alpha 测试剧"], [FILM_B_ID, "Beta 测试剧"]] as const) {
+    await saveWorkManifest(E2E_ROOT, createWorkManifest({ id, title, profileId: "interactive-film", language: "zh" }));
+  }
   await saveStoryGraph(E2E_ROOT, FILM_A_ID, makeGraph(FILM_A_ID, "Alpha 测试剧"));
   await saveStoryGraph(E2E_ROOT, FILM_B_ID, makeGraph(FILM_B_ID, "Beta 测试剧"));
 });

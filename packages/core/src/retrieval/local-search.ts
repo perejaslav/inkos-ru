@@ -232,6 +232,8 @@ export function tokenizeSearchText(text: string): string[] {
     if (!part.isWordLike || !token) continue;
     if (/^[\p{Script=Latin}\p{N}_-]+$/u.test(token) && token.length < 2) continue;
     tokens.push(token);
+    // Canonical Russian ё/e variant improves exact-match recall without language-wide stemming.
+    if (token.includes("ё")) tokens.push(token.replaceAll("ё", "е"));
   }
   // ICU can segment short Chinese compounds into individual Han characters.
   // Adjacent Han bigrams preserve those compounds for lexical retrieval; this
