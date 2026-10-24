@@ -27,6 +27,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
 
+      - run: node scripts/check-fork-release-safety.mjs
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm -r typecheck
