@@ -1,3 +1,4 @@
+import { providerDisplayLabel } from "../lib/provider-label";
 import { useState, useEffect } from "react";
 import { fetchJson } from "../hooks/use-api";
 import { useServiceStore } from "../store/service";
@@ -92,7 +93,7 @@ export function ServiceDetailPage({ serviceId, nav }: { serviceId: string; nav: 
 
   const resolvedCustomName = persistedCustomName || customName.trim() || "Custom";
   const effectiveServiceId = isCustom ? `custom:${resolvedCustomName}` : serviceId;
-  const label = isCustom ? (customName || persistedCustomName || tr("自定义服务", "Custom service")) : (svc?.label ?? serviceId);
+  const label = isCustom ? (customName || persistedCustomName || tr("自定义服务", "Custom service")) : providerDisplayLabel(svc?.label ?? serviceId);
   const storeModels = useServiceStore((s) => s.modelsByService[effectiveServiceId]);
 
   useEffect(() => {

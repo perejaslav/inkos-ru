@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, Eye, EyeOff, Loader2, Plus, Search, X } from "lucide-react";
 import { GROUP_ORDER, getGroupDescription, getGroupLabel, getGroupShortLabel } from "../constants/service-groups";
 import { tr } from "../lib/app-language";
+import { providerDisplayLabel } from "../lib/provider-label";
 import { fetchJson } from "../hooks/use-api";
 import { useServiceStore } from "../store/service";
 import type { EndpointGroup, ServiceInfo } from "../store/service";
@@ -38,7 +39,7 @@ function ServiceCard({ svc, onClick }: { svc: ServiceInfo; onClick: () => void }
     >
       <button onClick={onClick} className="flex flex-1 flex-col gap-2 text-left">
         <div className="flex items-center justify-between gap-3">
-          <span className="truncate text-sm font-medium">{svc.label}</span>
+          <span className="truncate text-sm font-medium">{providerDisplayLabel(svc.label)}</span>
           <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${svc.connected ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
         </div>
         <span className="text-xs text-muted-foreground/60">
@@ -182,7 +183,7 @@ function CoverConfigCard() {
             className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-sm"
           >
             {providers.map((provider) => (
-              <option key={provider.service} value={provider.service}>{provider.label}</option>
+              <option key={provider.service} value={provider.service}>{providerDisplayLabel(provider.label)}</option>
             ))}
           </select>
         </label>
