@@ -390,11 +390,13 @@ export class StateManager {
     await this.saveBookConfigAt(this.bookDir(bookId), config);
     try {
       const manifest = await loadWorkManifest(this.projectRoot, bookId);
-      if (manifest.language !== config.language || manifest.title !== config.title) {
+      if (manifest.language !== config.language || manifest.title !== config.title
+        || manifest.metadata.genre !== config.genre || manifest.metadata.platform !== config.platform) {
         await saveWorkManifest(this.projectRoot, {
           ...manifest,
           title: config.title,
           language: config.language,
+          metadata: { ...manifest.metadata, genre: config.genre, platform: config.platform },
           updatedAt: config.updatedAt,
         });
       }

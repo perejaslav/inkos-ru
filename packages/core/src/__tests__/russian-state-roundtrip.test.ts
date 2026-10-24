@@ -3,7 +3,7 @@ import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { StateManager } from "../state/manager.js";
-import { loadWorkManifest } from "../harness/work-store.js";
+import { loadWorkManifest, saveWorkManifest } from "../harness/work-store.js";
 
 describe("Russian state round trip", () => {
   it("persists Russian book language and retains Unicode titles", async () => {
@@ -28,9 +28,12 @@ describe("Russian state round trip", () => {
       expect(reloaded.language).toBe("ru");
       expect(reloaded.title).toBe("Северный город");
       const originalWork = await loadWorkManifest(root, id);
+      await saveWorkManifest(root, { ...originalWork, metadata: { ...originalWork.metadata, customTag: "важное" } });
       await state.saveBookConfig(id, {
         ...config,
         title: "Северный город — новая редакция",
+        genre: "fantasy",
+        platform: "royal-road",
         language: "en",
         updatedAt: "2026-10-24T01:00:00.000Z",
       });
@@ -42,6 +45,7 @@ describe("Russian state round trip", () => {
       expect(work.id).toBe(originalWork.id);
       expect(work.createdAt).toBe(originalWork.createdAt);
       expect(work.profileId).toBe(originalWork.profileId);
+      expect(work.metadata).toMatchObject({ genre: "fantasy", platform: "royal-road", customTag: "важное" });
       const raw = await readFile(join(state.bookDir(id), "book.json"), "utf8");
       expect(raw).toContain("Северный город");
     } finally {
