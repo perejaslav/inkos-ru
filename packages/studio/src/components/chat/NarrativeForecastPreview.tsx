@@ -102,16 +102,18 @@ const RISK_LABELS: Readonly<Record<string, readonly [string, string]>> = {
   character: ["人物", "Character"],
 };
 
+const RISK_LABELS_RU: Readonly<Record<string, string>> = { continuity: "Последовательность", causality: "Причинность", character: "Персонаж" };
+
 function label(zh: boolean, values: readonly [string, string]): string {
   return zh ? values[0] : values[1];
 }
 
-function RiskPills({ risks, zh }: { risks: readonly ForecastRisk[]; zh: boolean }) {
+function RiskPills({ risks, zh, ru }: { risks: readonly ForecastRisk[]; zh: boolean; ru: boolean }) {
   if (risks.length === 0) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5 text-[11px] text-emerald-700 dark:text-emerald-300">
         <ShieldCheck size={11} />
-        {zh ? "未发现硬风险" : "No hard risks"}
+        {ru ? "Критических рисков нет" : zh ? "未发现硬风险" : "No hard risks"}
       </span>
     );
   }
@@ -123,7 +125,7 @@ function RiskPills({ risks, zh }: { risks: readonly ForecastRisk[]; zh: boolean 
           title={risk.description}
           className="inline-flex items-center rounded-full border border-amber-500/25 bg-amber-500/8 px-2 py-0.5 text-[11px] text-amber-800 dark:text-amber-200"
         >
-          {RISK_LABELS[risk.kind] ? label(zh, RISK_LABELS[risk.kind]!) : risk.kind}
+          {ru && RISK_LABELS_RU[risk.kind] ? RISK_LABELS_RU[risk.kind] : RISK_LABELS[risk.kind] ? label(zh, RISK_LABELS[risk.kind]!) : risk.kind}
         </span>
       ))}
     </div>
@@ -147,6 +149,7 @@ function BranchCard({
   forecastId,
   stale,
   zh,
+  ru,
   pending,
   onSelect,
 }: {
@@ -154,6 +157,7 @@ function BranchCard({
   readonly forecastId: string;
   readonly stale: boolean;
   readonly zh: boolean;
+  readonly ru: boolean;
   readonly pending: boolean;
   readonly onSelect?: (branchId: string) => void;
 }) {
@@ -175,29 +179,29 @@ function BranchCard({
         {branch.beats.map((beat) => (
           <li key={`${branch.branchId}-${beat.chapter}`} className="relative text-xs leading-5 text-foreground/90">
             <span className="absolute -left-[15px] top-[7px] h-1.5 w-1.5 rounded-full bg-primary/65" />
-            <span className="font-medium text-primary">{zh ? `第 ${beat.chapter} 章` : `Ch. ${beat.chapter}`}</span>
+            <span className="font-medium text-primary">{ru ? `Гл. ${beat.chapter}` : zh ? `第 ${beat.chapter} 章` : `Ch. ${beat.chapter}`}</span>
             <span className="ml-1.5">{beat.summary}</span>
           </li>
         ))}
       </ol>
 
-      <div className="mt-3"><RiskPills risks={branch.risks} zh={zh} /></div>
+      <div className="mt-3"><RiskPills risks={branch.risks} zh={zh} ru={ru} /></div>
 
       <details className="group mt-3 border-t border-border/40 pt-2.5">
         <summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
           <ChevronRight size={13} className="transition-transform group-open:rotate-90" />
-          {zh ? "人物决定、变化与不确定性" : "Decisions, changes, uncertainties"}
+          {ru ? "Решения, изменения и неопределённости" : zh ? "人物决定、变化与不确定性" : "Decisions, changes, uncertainties"}
         </summary>
         <div className="mt-3 space-y-3">
           <ChangeList
-            title={zh ? "人物决定" : "Character decisions"}
+            title={ru ? "Решения персонажей" : zh ? "人物决定" : "Character decisions"}
             items={branch.characterDecisions.map((item) => `${item.character}：${item.decision}`)}
           />
-          <ChangeList title={zh ? "人物变化" : "Character changes"} items={branch.projectedChanges.characters} />
-          <ChangeList title={zh ? "关系变化" : "Relationship changes"} items={branch.projectedChanges.relationships} />
-          <ChangeList title={zh ? "世界变化" : "World changes"} items={branch.projectedChanges.world} />
-          <ChangeList title={zh ? "伏笔变化" : "Hook changes"} items={branch.projectedChanges.hooks} />
-          <ChangeList title={zh ? "不确定性" : "Uncertainties"} items={branch.uncertainties} />
+          <ChangeList title={ru ? "Изменения персонажей" : zh ? "人物变化" : "Character changes"} items={branch.projectedChanges.characters} />
+          <ChangeList title={ru ? "Изменения отношений" : zh ? "关系变化" : "Relationship changes"} items={branch.projectedChanges.relationships} />
+          <ChangeList title={ru ? "Изменения мира" : zh ? "世界变化" : "World changes"} items={branch.projectedChanges.world} />
+          <ChangeList title={ru ? "Изменения сюжетных линий" : zh ? "伏笔变化" : "Hook changes"} items={branch.projectedChanges.hooks} />
+          <ChangeList title={ru ? "Неопределённости" : zh ? "不确定性" : "Uncertainties"} items={branch.uncertainties} />
           <p className="rounded-lg bg-muted/45 px-2.5 py-2 text-xs leading-5 text-muted-foreground">
             {branch.intentRationale}
           </p>
@@ -214,8 +218,8 @@ function BranchCard({
       >
         {pending ? <RefreshCw size={13} className="animate-spin" /> : <Check size={13} />}
         {stale
-          ? (zh ? "过期推演不可采用" : "Stale forecast")
-          : (zh ? "采用此分支" : "Use this branch")}
+          ? (ru ? "Устаревший прогноз" : zh ? "过期推演不可采用" : "Stale forecast")
+          : (ru ? "Выбрать ветку" : zh ? "采用此分支" : "Use this branch")}
       </button>
     </article>
   );
@@ -293,9 +297,9 @@ export function NarrativeForecastPreview({ exec, onSelectBranch, onRecheck }: Na
             </div>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-foreground/85">{forecast.divergence}</p>
             <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-              <span>{zh ? `基于第 ${forecast.baseChapter} 章` : `After chapter ${forecast.baseChapter}`}</span>
-              <span>{zh ? `${forecast.branches.length} 条候选分支` : `${forecast.branches.length} branches`}</span>
-              <span>{zh ? `推演未来约 ${forecast.horizon} 章` : `~${forecast.horizon} chapters ahead`}</span>
+              <span>{ru ? `После главы ${forecast.baseChapter}` : zh ? `基于第 ${forecast.baseChapter} 章` : `After chapter ${forecast.baseChapter}`}</span>
+              <span>{ru ? `Веток: ${forecast.branches.length}` : zh ? `${forecast.branches.length} 条候选分支` : `${forecast.branches.length} branches`}</span>
+              <span>{ru ? `Прогноз на ${forecast.horizon} глав` : zh ? `推演未来约 ${forecast.horizon} 章` : `~${forecast.horizon} chapters ahead`}</span>
             </div>
           </div>
           {onRecheck && (
@@ -331,6 +335,7 @@ export function NarrativeForecastPreview({ exec, onSelectBranch, onRecheck }: Na
               forecastId={forecast.forecastId}
               stale={stale}
               zh={zh}
+              ru={ru}
               pending={pendingBranch === branch.branchId}
               onSelect={onSelectBranch ? (branchId) => { void selectBranch(branchId); } : undefined}
             />
