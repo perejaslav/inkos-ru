@@ -250,7 +250,7 @@ export function BookDetail({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ feedback }),
       });
-      return data?.book.language === "en" ? "Foundation revised." : "基础设定已重修。";
+      return data?.book.language === "ru" ? "Основа произведения обновлена." : data?.book.language === "en" ? "Foundation revised." : "基础设定已重修。";
     });
   };
 
@@ -520,7 +520,7 @@ export function BookDetail({
                         onClick={() => handleSync(ch.number)}
                         disabled={syncingChapters.includes(ch.number) || ch.number !== latestPersistedChapter}
                         className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all shadow-sm disabled:opacity-50"
-                        title={data?.book.language === "en" ? "Sync truth/state from edited chapter" : "根据已编辑章节同步 truth/state"}
+                        title={data?.book.language === "ru" ? "Синхронизировать факты и состояние по отредактированной главе" : data?.book.language === "en" ? "Sync truth/state from edited chapter" : "根据已编辑章节同步 truth/state"}
                       >
                         {syncingChapters.includes(ch.number)
                           ? <div className="w-3.5 h-3.5 border-2 border-muted-foreground/20 border-t-muted-foreground rounded-full animate-spin" />
