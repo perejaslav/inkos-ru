@@ -6166,16 +6166,21 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     } catch {
       return c.json({ error: `Parent book "${body.parentBookId}" not found` }, 404);
     }
-    const language = (body.language ?? parent.language) as "zh" | "en" | "ru" | undefined;
+    const language = body.language ?? parent.language;
     const now = new Date().toISOString();
-    const bookConfig = buildStudioBookConfig({
+    let bookConfig: ReturnType<typeof buildStudioBookConfig>;
+    try {
+      bookConfig = buildStudioBookConfig({
       title: body.title,
       genre: body.genre ?? parent.genre ?? "other",
       platform: body.platform ?? parent.platform,
       targetChapters: body.targetChapters ?? parent.targetChapters,
       chapterWordCount: body.chapterWordCount ?? parent.chapterWordCount,
       ...(language ? { language } : {}),
-    }, now);
+      }, now);
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 400);
+    }
     const bookId = bookConfig.id;
     if (!bookId) {
       return c.json({ error: "Could not derive a valid book id from title" }, 400);
@@ -6232,14 +6237,19 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       return c.json({ error: "title, referenceText and storyIdea are required" }, 400);
     }
     const now = new Date().toISOString();
-    const bookConfig = buildStudioBookConfig({
-      title: body.title,
-      genre: body.genre ?? "other",
-      platform: body.platform,
-      targetChapters: body.targetChapters,
-      chapterWordCount: body.chapterWordCount,
-      ...(body.language ? { language: body.language as "zh" | "en" | "ru" } : {}),
-    }, now);
+    let bookConfig: ReturnType<typeof buildStudioBookConfig>;
+    try {
+      bookConfig = buildStudioBookConfig({
+        title: body.title,
+        genre: body.genre ?? "other",
+        platform: body.platform,
+        targetChapters: body.targetChapters,
+        chapterWordCount: body.chapterWordCount,
+        ...(body.language ? { language: body.language } : {}),
+      }, now);
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 400);
+    }
     const bookId = bookConfig.id;
     if (!bookId) {
       return c.json({ error: "Could not derive a valid book id from title" }, 400);
