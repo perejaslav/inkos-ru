@@ -161,3 +161,9 @@
 - Общий pnpm test по предыдущему прогону: Core 734/734, Studio 319/319, CLI 90/90 PASS (1143/1143).
 - GitHub Actions: `gh api repos/perejaslav/inkos-ru/actions/workflows` = 0; `/actions/runs` = 0. При этом actions/permissions.enabled=true и `.github/workflows/ci.yml` + `release.yml` существуют на master; зафиксирован блокирующий фактор регистрации/активации workflow на стороне GitHub, успешную удалённую матрицу заявлять нельзя.
 - Реальный LLM-генератор и качество русского художественного текста всё ещё NOT VERIFIED. Публичный релиз не выполнялся.
+
+## GitHub Actions fork — восстановление регистрации (2026-10-24)
+
+- Подтверждено: GitHub API ранее возвращал 0 workflows и 0 runs при enabled=true; причина заключалась в необходимости активировать Actions на fork через PUT /actions/permissions.
+- После повторного включения зарегистрированы 2 workflows: CI (active) и Release. Release сразу принудительно переведён в `disabled_manually`, чтобы upstream публикация @actalk/* не запускалась в форке.
+- CI включён для безопасной ветки feat/russian-localization. Результаты матрицы Windows/Linux и Node 22/24 считать VERIFIED только после получения завершённых job-результатов.
