@@ -19,6 +19,10 @@ describe("Russian state round trip", () => {
         updatedAt: "2026-10-24T00:00:00.000Z",
       };
       await state.saveBookConfig(id, config);
+      await state.ensureControlDocuments(id);
+      const control = await state.loadControlDocuments(id);
+      expect(control.authorIntent).toContain("Авторский замысел");
+      expect(control.currentFocus).toContain("Текущий фокус");
       const reloaded = await new StateManager(root).loadBookConfig(id);
       expect(reloaded.language).toBe("ru");
       expect(reloaded.title).toBe("Северный город");
