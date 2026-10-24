@@ -69,3 +69,10 @@
 - `pnpm --filter @actalk/inkos typecheck` PASS и 5/5 тестов `tui-slash-autocomplete` PASS.
 - Локальный LLM endpoint 127.0.0.1:8081 недоступен: проверка реального качества текста остаётся NOT VERIFIED.
 - В GitHub Actions API `actions/workflows` возвращает 0 зарегистрированных workflow, хотя `.github/workflows/ci.yml` находится в рабочей ветке. Нельзя утверждать, что матрица CI была выполнена.
+
+## Следующий проход TUI — 2026-10-24
+
+- Исправлены китайские fallback-сообщения в русской TUI-сессии для `/works`, `/work`, `/new`, `/short`, `/cover`, `/play`, `/write`, `/confirm`, `/cancel` и карточки подтверждения.
+- CLI typecheck PASS, CLI regression 89/89 PASS до добавления нового теста, целевой новый русский маршрут 1/1 PASS; общая повторная suite после нового теста NOT VERIFIED.
+- GitHub API показывает Actions enabled, но `actions/workflows` возвращает 0, хотя файл CI доступен в ветке и в master. Фактический запуск матрицы CI NOT VERIFIED; не заявлять PASS.
+- Локальная LLM по 127.0.0.1:8081 недоступна, ручная литературная приемка NOT VERIFIED.
