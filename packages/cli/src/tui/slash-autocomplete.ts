@@ -1,10 +1,10 @@
 import type { CliLanguage } from "../localization.js";
 
-const SLASH_COMMAND_VARIANTS: ReadonlyArray<{ zh: string; en: string }> = [
-  { zh: "/new 输入你的想法", en: "/new describe your idea" },
-  { zh: "/short 输入短篇方向", en: "/short describe the short" },
-  { zh: "/play [open|guided] 输入互动世界开局", en: "/play [open|guided] describe the opening" },
-  { zh: "/cover 输入封面方向", en: "/cover describe the cover" },
+const SLASH_COMMAND_VARIANTS: ReadonlyArray<{ zh: string; en: string; ru?: string }> = [
+  { zh: "/new 输入你的想法", en: "/new describe your idea", ru: "/new опишите идею книги" },
+  { zh: "/short 输入短篇方向", en: "/short describe the short", ru: "/short опишите сюжет рассказа" },
+  { zh: "/play [open|guided] 输入互动世界开局", en: "/play [open|guided] describe the opening", ru: "/play [open|guided] опишите начало истории" },
+  { zh: "/cover 输入封面方向", en: "/cover describe the cover", ru: "/cover опишите обложку" },
   { zh: "/write", en: "/write" },
   { zh: "/confirm", en: "/confirm" },
   { zh: "/cancel", en: "/cancel" },
@@ -18,7 +18,7 @@ const SLASH_COMMAND_VARIANTS: ReadonlyArray<{ zh: string; en: string }> = [
 ];
 
 export function buildSlashCommands(language: CliLanguage = "zh"): readonly string[] {
-  return SLASH_COMMAND_VARIANTS.map((variant) => (language === "en" ? variant.en : variant.zh));
+  return SLASH_COMMAND_VARIANTS.map((variant) => (language === "ru" ? variant.ru ?? variant.en : language === "en" ? variant.en : variant.zh));
 }
 
 export const SLASH_COMMANDS = buildSlashCommands("zh");
