@@ -2281,7 +2281,7 @@ export function createPlayStartTool(
       await store.ensureRun(world.id, runId);
 
       const existingTranscript = await store.readTranscript(world.id, runId);
-      const sceneText = (initialScene?.trim() || (world.language === "en"
+      const sceneText = (initialScene?.trim() || (world.language === "ru" ? [`Вы входите в мир «${world.title}».`, world.premise || "Сцена готова. Сделайте первый ход."].join("\n") : world.language === "en"
         ? [`You enter "${world.title}".`, world.premise || "The scene is set. Make your first move."].join("\n")
         : [`你进入「${world.title}」。`, world.premise || "场景已经就位，等待你的第一个动作。"].join("\n"))).trim();
       const suggestedActions = world.mode === "guided"
@@ -2323,7 +2323,7 @@ export function createPlayStartTool(
 
         if (!graph?.entities?.some((entity) => entity.id === "actor_player")
           || !graph.entities.some((entity) => entity.id !== "actor_player")) {
-          throw new Error(world.language === "en"
+          throw new Error(world.language === "ru" ? "Начальное состояние мира неполное: не создан граф игрока и мира." : world.language === "en"
             ? "Play opening state is incomplete: no usable player/world graph was created."
             : "互动世界开场状态不完整：没有生成可用的玩家与世界图谱。");
         }
@@ -2662,7 +2662,7 @@ export function createPlayStepTool(
       const runId = "main";
       const world = await store.loadWorld(worldId);
       if (!world) {
-        throw new Error(options.language === "en"
+        throw new Error(options.language === "ru" ? "Интерактивный мир не создан. Сначала вызовите play_start." : options.language === "en"
           ? "There is no interactive world to advance yet. Start one with play_start first."
           : "还没有可推进的互动世界。先用 play_start 开一局。");
       }
@@ -2749,7 +2749,7 @@ export function createPlayReviseTool(
       const runId = "main";
       const world = await store.loadWorld(worldId);
       if (!world) {
-        throw new Error(options.language === "en"
+        throw new Error(options.language === "ru" ? "Интерактивный мир не создан. Сначала вызовите play_start." : options.language === "en"
           ? "There is no interactive world to redo yet. Start one with play_start first."
           : "还没有可重做的互动世界。先用 play_start 开一局。");
       }
@@ -2783,7 +2783,7 @@ export function createPlayReviseTool(
           const turn = params.turn;
           const variantId = params.variantId?.trim();
           if (typeof turn !== "number" || !Number.isFinite(turn) || !variantId) {
-            throw new Error(isZh
+            throw new Error(isRu ? "Укажите обязательные данные для редактирования или восстановления хода." : isZh
               ? "恢复版本需要 turn 和 variantId。"
               : "Restoring a variant requires both turn and variantId.");
           }
@@ -2812,7 +2812,7 @@ export function createPlayReviseTool(
 
         const replacement = params.action === "edit_last_input" ? params.input?.trim() : undefined;
         if (params.action === "edit_last_input" && !replacement) {
-          throw new Error(isZh
+          throw new Error(isRu ? "Укажите обязательные данные для редактирования или восстановления хода." : isZh
             ? "编辑上一条玩家动作需要提供新的 input。"
             : "Editing the previous player action requires a new input.");
         }
