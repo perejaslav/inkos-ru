@@ -410,6 +410,8 @@ export { ContinuityAuditor, type AuditResult } from "./agents/continuity.js";
 export { ReviserAgent, DEFAULT_REVISE_MODE, type ReviseOutput, type ReviseMode } from "./agents/reviser.js";
 export { RadarAgent, type RadarResult, type RadarRecommendation } from "./agents/radar.js";
 export { FanqieRadarSource, QidianRadarSource, TextRadarSource, type RadarSource, type PlatformRankings, type RankingEntry } from "./agents/radar-source.js";
+export { fetchLitmarketGenres, parseLitmarketGenres, fetchLitnetPopular, parseLitnetPopular, fetchAuthorTodayMonthly, parseAuthorTodayMonthly, type AuthorTodayRankedBook, type RussianMarketObservation, type RussianMarketRankedBook } from "./agents/ru-market-sources.js";
+export { compareRussianMarketSnapshots, type MarketSnapshot, type GenreChange } from "./agents/ru-market-trends.js";
 export { readBookRules } from "./agents/rules-reader.js";
 export { buildWriterSystemPrompt } from "./agents/writer-prompts.js";
 export { detectAIContent, type DetectionResult } from "./agents/detector.js";

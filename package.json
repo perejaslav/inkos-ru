@@ -2,6 +2,7 @@
   "name": "inkos",
   "version": "2.0.0",
   "private": true,
+  "packageManager": "pnpm@10.33.2",
   "description": "Story Creation AI Agent for novels, short fiction, scripts, interactive worlds, and multilingual translation",
   "keywords": [
     "story-creation-ai-agent",

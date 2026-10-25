@@ -15,6 +15,9 @@ import {
   recoverAtomicFileSets,
   commitAtomicFileSet,
   PipelineRunner,
+  fetchLitmarketGenres,
+  fetchLitnetPopular,
+  fetchAuthorTodayMonthly,
   createLLMClient,
   createLogger,
   computeAnalytics,
@@ -6314,6 +6317,97 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   });
 
   // --- Radar Scan ---
+
+  // Independent Russian-market pilot. Does not call an LLM or alter the legacy radar.
+  app.get("/api/v1/radar/ru/litmarket/genres", async (c) => {
+    try {
+      const items = await fetchLitmarketGenres();
+      return c.json({ items, source: "litmarket", metric: "published_books" });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 502);
+    }
+  });
+  app.get("/api/v1/radar/ru/litnet/popular", async (c) => {
+    try {
+      const items = await fetchLitnetPopular();
+      return c.json({ items, source: "litnet", metric: "listing_position" });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 502);
+    }
+  });
+  app.get("/api/v1/radar/ru/author-today/monthly", async (c) => {
+    try {
+      const items = await fetchAuthorTodayMonthly();
+      return c.json({ items, source: "author-today", metric: "listing_position", period: "month" });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 502);
+    }
+  });
+
+  // Persist public-source observations separately from the legacy Chinese radar history.
+  app.post("/api/v1/radar/ru/snapshot", async (c) => {
+    const sources = await Promise.allSettled([fetchLitmarketGenres(), fetchLitnetPopular(), fetchAuthorTodayMonthly()]);
+    const ids = ["litmarket", "litnet", "author-today"] as const;
+    const observations = sources.map((outcome, index) => ({
+      source: ids[index],
+      status: outcome.status === "fulfilled" ? "ok" : "error",
+      items: outcome.status === "fulfilled" ? outcome.value : [],
+      error: outcome.status === "rejected" ? (outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason)) : null,
+    }));
+    if (observations.every((source) => source.status === "error")) {
+      return c.json({ error: "Все российские источники недоступны", sources: observations }, 502);
+    }
+    const snapshot = { timestamp: new Date().toISOString(), market: "ru", sources: observations };
+    const directory = join(root, "radar", "ru");
+    try {
+      await mkdir(directory, { recursive: true });
+      await writeFile(join(directory, `snapshot-${radarTimestampForFilename(snapshot.timestamp)}.json`), JSON.stringify(snapshot, null, 2), "utf-8");
+      return c.json(snapshot);
+    } catch (error) {
+      return c.json({ error: `Не удалось сохранить снимок: ${String(error)}` }, 500);
+    }
+  });
+
+  app.get("/api/v1/radar/ru/history", async (c) => {
+    const directory = join(root, "radar", "ru");
+    try {
+      const names = (await readdir(directory)).filter((name) => /^snapshot-[\dTZ-]+\.json$/.test(name)).sort().reverse().slice(0, 30);
+      const items = await Promise.all(names.map(async (name) => {
+        try { return JSON.parse(await readFile(join(directory, name), "utf-8")) as unknown; } catch { return null; }
+      }));
+      return c.json({ items: items.filter((item) => item !== null) });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return c.json({ items: [] });
+      return c.json({ error: String(error) }, 500);
+    }
+  });
+
+  app.post("/api/v1/radar/ru/analyze", async (c) => {
+    try {
+      const directory = join(root, "radar", "ru");
+      const files = (await readdir(directory)).filter((name) => /^snapshot-[\dTZ-]+\.json$/.test(name)).sort().reverse();
+      if (!files.length) return c.json({ error: "Сначала сохраните снимок российского рынка" }, 400);
+      const snapshots = await Promise.all(files.slice(0, 2).map(async (name) => JSON.parse(await readFile(join(directory, name), "utf-8"))));
+      const current = snapshots[0] as { timestamp: string; sources: Array<{ source: string; status: string; items: unknown[] }> };
+      const previous = snapshots[1] as typeof current | undefined;
+      const data = current.sources.map((source) => ({ source: source.source, status: source.status,
+        items: source.status === "ok" ? source.items.slice(0, source.source === "litmarket" ? 20 : 8).map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const entry = item as Record<string, unknown>;
+          return source.source === "litmarket"
+            ? { genre: entry.genre, booksCount: entry.booksCount, metric: entry.metric, url: entry.url }
+            : { title: entry.title, author: entry.author, rank: entry.rank, metric: entry.metric, url: entry.url };
+        }) : [] }));
+      const config = await loadCurrentProjectConfig();
+      const response = await withTimeout(chatCompletion(createLLMClient(config.llm), config.llm.model, [{
+        role: "user",
+        content: `Подготовь краткий отчёт на русском, максимум 350 слов. Используй ТОЛЬКО данные ниже. Не выдумывай продажи, выручку, просмотры, спрос, динамику или ссылки. Количество опубликованных книг — предложение, а позиция в списке — не продажи. Структура: факты, ограничения, гипотезы (отдельно от фактов), идеи авторам. Приведи 2–3 URL только из данных. Дата снимка: ${current.timestamp}; предыдущий: ${previous?.timestamp ?? "отсутствует"}. Без расчёта не утверждай динамику. Данные: ${JSON.stringify(data)}`,
+      }], { maxTokens: 3000, retry: false }), 90_000, "Russian market analysis");
+      return c.json({ report: response.content, model: config.llm.model, timestamp: current.timestamp });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 502);
+    }
+  });
 
   app.post("/api/v1/radar/scan", async (c) => {
     broadcast("radar:start", {});

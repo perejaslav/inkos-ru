@@ -61,6 +61,7 @@ export class FanqieRadarSource implements RadarSource {
         const url = `https://api-lf.fanqiesdk.com/api/novel/channel/homepage/rank/rank_list/v2/?aid=13&limit=15&offset=0&side_type=${sideType}`;
         const res = await globalThis.fetch(url, {
           headers: { "User-Agent": "Mozilla/5.0 (compatible; InkOS/0.1)" },
+          signal: AbortSignal.timeout(10_000),
         });
         if (!res.ok) continue;
         const data = (await res.json()) as Record<string, unknown>;
@@ -94,6 +95,7 @@ export class QidianRadarSource implements RadarSource {
     try {
       const url = "https://www.qidian.com/rank/";
       const res = await globalThis.fetch(url, {
+        signal: AbortSignal.timeout(10_000),
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
