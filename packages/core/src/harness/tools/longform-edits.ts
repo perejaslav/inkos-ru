@@ -1,3 +1,4 @@
+import { ChapterPatchBudget } from "../chapter-patch-budget.js";
 import { Type, type Static } from "@mariozechner/pi-ai";
 import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -71,6 +72,7 @@ function editDeps(state: StateManager) {
   return {
     bookDir: (bookId: string) => state.bookDir(bookId),
     loadChapterIndex: (bookId: string) => state.loadChapterIndex(bookId),
+    loadBookLanguage: async (bookId: string) => (await state.loadBookConfig(bookId)).language,
     saveChapterIndex: (bookId: string, index: Awaited<ReturnType<StateManager["loadChapterIndex"]>>) => (
       state.saveChapterIndex(bookId, index)
     ),
@@ -224,6 +226,7 @@ function editTool<TSchema extends typeof RenameEntityParams | typeof PatchChapte
     readonly request: (bookId: string, params: Static<TSchema>) => EditRequest;
   },
 ): AgentTool<TSchema> {
+  const patchBudget = new ChapterPatchBudget();
   return {
     name: input.name,
     label: input.label,
@@ -235,7 +238,14 @@ function editTool<TSchema extends typeof RenameEntityParams | typeof PatchChapte
       const execution = await withBookLock(
         state,
         bookId,
-        () => executeEditTransaction(editDeps(state), input.request(bookId, params)),
+        async () => {
+          const request = input.request(bookId, params);
+          const key = request.kind === "chapter-local-edit" ? `${bookId}:${request.chapterNumber}` : "";
+          if (request.kind === "chapter-local-edit") patchBudget.assertAvailable(key);
+          const applied = await executeEditTransaction(editDeps(state), request);
+          if (request.kind === "chapter-local-edit") patchBudget.recordApplied(key);
+          return applied;
+        },
       );
       return textResult(execution.summary, {
         kind: "longform_edit_applied",

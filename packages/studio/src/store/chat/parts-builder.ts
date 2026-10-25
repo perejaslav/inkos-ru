@@ -55,6 +55,12 @@ const TOOL_LABELS: Record<string, readonly [string, string]> = {
   export_book: ["导出作品", "Export Work"],
 };
 
+const RU_TOOL_LABELS: Record<string, string> = {
+  create_book: "Создание романа", write_chapters: "Написание глав",
+  review_chapter: "Проверка главы", revise_chapter: "Редактирование главы",
+  patch_chapter_text: "Точечная правка главы", replace_chapter_text: "Замена главы",
+  revise_foundation: "Изменение основы романа", export_book: "Экспорт книги",
+};
 function resolveToolLabel(tool: string, _agent?: string): string {
   const action = actionToolName(tool);
   const label = TOOL_LABELS[action];
@@ -242,7 +248,7 @@ export function buildPartsFromEvents(events: StreamEvent[]): MessagePart[] {
             exec.status = event.isError ? "error" : "completed";
             exec.completedAt = Date.now();
             if (event.isError) exec.error = localizeKnownRuntimeMessage(summarizeToolResult(event.result));
-            else exec.result = summarizeToolResult(event.result);
+            else exec.result = localizeKnownRuntimeMessage(summarizeToolResult(event.result));
             if (event.details !== undefined) exec.details = event.details;
             if (
               !event.isError

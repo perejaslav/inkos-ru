@@ -1,6 +1,7 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { EPub } from "epub-gen-memory";
+import { countChapterLength, resolveLengthCountingMode } from "../utils/length-metrics.js";
 import {renderChapterDocument} from '../utils/chapter-document.js';
 import {readChapterHeading} from '../utils/chapter-splitter.js';
 
@@ -108,7 +109,13 @@ export async function buildExportArtifact(
   const chaptersDir = join(bookDir, "chapters");
   const outputPath = options.outputPath ?? join(bookDir, "exports", `${bookId}.${format}`);
   const chapterFiles = buildChapterFileLookup(await readdir(chaptersDir), chapters);
-  const totalWords = chapters.reduce((sum, chapter) => sum + chapter.wordCount, 0);
+  // Count actual persisted prose, not an index that may predate manual edits.
+  let totalWords = 0;
+  for (const chapter of chapters) {
+    const file = chapterFiles.get(chapter.number)!;
+    const content = await readFile(join(chaptersDir, file), "utf-8");
+    totalWords += countChapterLength(content, resolveLengthCountingMode(book.language === "ru" || book.language === "en" ? book.language : "zh"));
+  }
   const readChapter = async (chapter: typeof chapters[number], file: string) => {
     const raw = await readFile(join(chaptersDir, file), 'utf-8');
     const heading = readChapterHeading(raw.trimStart().split(/\r?\n/u)[0] ?? '');

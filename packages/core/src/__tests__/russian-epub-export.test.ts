@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import JSZip from "jszip";
 import { buildExportArtifact } from "../interaction/export-artifact.js";
+import { countChapterLength } from "../utils/length-metrics.js";
 
 describe("Russian book export", () => {
   it("preserves Cyrillic chapter and EPUB language metadata", async () => {
@@ -20,6 +21,8 @@ describe("Russian book export", () => {
       const md = await buildExportArtifact(source, "ru-book", { format: "md" });
       expect(md.payload).toContain("# Глава 1. Ёж и зима");
       const epub = await buildExportArtifact(source, "ru-book", { format: "epub" });
+      const actual = countChapterLength("# Глава 1. Ёж и зима\n\nЁж вышел из дома.", "ru_words");
+      expect(epub.totalWords).toBe(actual);
       const zip = await JSZip.loadAsync(epub.payload);
       const texts = await Promise.all(Object.values(zip.files).filter((x) => !x.dir && /\.(?:opf|xhtml|html)$/i.test(x.name)).map((x) => x.async("string")));
       expect(texts.join(" ")).toContain("ru-RU");

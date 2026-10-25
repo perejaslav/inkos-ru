@@ -1,5 +1,6 @@
 import { access, readdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative } from "node:path";
+import { countChapterLength, resolveLengthCountingMode } from "../utils/length-metrics.js";
 import type { ChapterMeta } from "../models/chapter.js";
 import {
   archiveChapterVersion,
@@ -61,6 +62,7 @@ export interface PlannedEditTransaction {
 export interface EditExecutionDeps {
   readonly bookDir: (bookId: string) => string;
   readonly loadChapterIndex: (bookId: string) => Promise<ReadonlyArray<ChapterMeta>>;
+  readonly loadBookLanguage?: (bookId: string) => Promise<"zh" | "en" | "ru">;
   readonly saveChapterIndex: (bookId: string, index: ReadonlyArray<ChapterMeta>) => Promise<void>;
 }
 
@@ -324,14 +326,6 @@ function recordManualEditObservation(
     : chapter);
 }
 
-function roughChapterLength(content: string): number {
-  return content
-    .replace(/^---[\s\S]*?---\s*/m, "")
-    .replace(/^#{1,6}\s+.*$/gm, "")
-    .replace(/\s+/g, "")
-    .length;
-}
-
 async function executeChapterReplace(
   deps: EditExecutionDeps,
   request: Extract<EditRequest, { kind: "chapter-replace" }>,
@@ -360,7 +354,7 @@ async function executeChapterReplace(
     await deps.loadChapterIndex(request.bookId),
     request.chapterNumber,
     "Chapter content was replaced by an explicit edit action.",
-    roughChapterLength(fullText),
+    countChapterLength(replacementContent, resolveLengthCountingMode(await deps.loadBookLanguage?.(request.bookId) ?? "zh")),
   );
   await deps.saveChapterIndex(request.bookId, updatedIndex);
 
@@ -398,7 +392,7 @@ async function executeChapterLocalEdit(
     await deps.loadChapterIndex(request.bookId),
     request.chapterNumber,
     "Chapter content was changed by an explicit local edit action.",
-    roughChapterLength(nextContent),
+    countChapterLength(nextContent, resolveLengthCountingMode(await deps.loadBookLanguage?.(request.bookId) ?? "zh")),
   );
   await deps.saveChapterIndex(request.bookId, updatedIndex);
 

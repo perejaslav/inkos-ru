@@ -280,7 +280,7 @@ function emptyAssistantMessage(model: Model<Api>): AssistantMessage {
 }
 
 function explicitDeepSeekThinkingMode(payload: unknown, model: Model<Api>): unknown {
-  if (!model.id.toLowerCase().startsWith("deepseek-v4-") || !payload || typeof payload !== "object") return payload;
+  if (!(model.id.toLowerCase().startsWith("deepseek-v4-") || model.id.toLowerCase() === "deepseek-flash") || !payload || typeof payload !== "object") return payload;
   // V4 enables high-effort thinking when the field is absent. Match the
   // configured mode explicitly, including through OpenAI-compatible gateways.
   const body = { ...payload, thinking: { type: model.reasoning ? "enabled" : "disabled" } } as Record<string, unknown>;

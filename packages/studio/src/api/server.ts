@@ -1,3 +1,4 @@
+import { writeNextParameters } from "./write-next-params.js";
 import { parseStudioProjectLanguage, parseStudioBookLanguageUpdate, resolveStudioStyleLanguage } from "./project-language.js";
 import { createHash } from "node:crypto";
 import { Hono } from "hono";
@@ -252,7 +253,15 @@ const TOOL_LABELS: Record<string, BilingualLabel> = {
   select_narrative_branch: { zh: "采用候选分支", en: "Select candidate branch" },
 };
 
+const RU_TOOL_LABELS: Record<string, string> = {
+  create_book: "Создание романа", write_chapters: "Написание глав",
+  review_chapter: "Проверка главы", revise_chapter: "Редактирование главы",
+  patch_chapter_text: "Точечная правка главы", replace_chapter_text: "Замена текста главы",
+  revise_foundation: "Изменение основы романа", export_book: "Экспорт книги",
+  create_work: "Создание произведения", finish_turn: "Завершение задачи",
+};
 function resolveToolLabel(tool: string, _agent?: string, lang: StudioLanguage = "zh"): string {
+  if (lang === "ru" && RU_TOOL_LABELS[tool]) return RU_TOOL_LABELS[tool]!;
   const label = TOOL_LABELS[tool];
   return label ? pick(lang, label.zh, label.en) : tool;
 }
@@ -1220,11 +1229,8 @@ async function executeConfirmedProductionAction(args: {
           : profileSkills("longform-novel")
       ),
     });
-    params = {
-      bookId: args.bookId,
-      instruction: args.instruction,
-      chapterCount,
-    };
+    params = await writeNextParameters(new StateManager(args.root), args.bookId, args.instruction, chapterCount);
+
   } else if (args.requestedIntent === "generate_cover") {
     const payload = actionPayload?.generateCover;
     const title = requirePayloadText(payload?.title, pick(lang, "确认生成封面缺少标题，请重新生成确认卡。", "The cover generation confirmation is missing a title. Regenerate the confirmation card."));
@@ -3350,12 +3356,8 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       projectRoot: root,
       binding: confirmedCapabilityBinding("write_next")!,
       tool,
-      parameters: {
-        instruction: "Write the next chapter for the active Work.",
-        bookId: id,
-        chapterCount: 1,
-        ...(body.wordCount ? { chapterWordCount: body.wordCount } : {}),
-      },
+      parameters: await writeNextParameters(new StateManager(root), id, "Write the next chapter for the active Work.", 1, body.wordCount),
+
       workId: id,
     }).then(
       (result) => {

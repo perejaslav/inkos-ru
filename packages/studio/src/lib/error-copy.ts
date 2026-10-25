@@ -25,5 +25,12 @@ export function localizeKnownRuntimeMessage(message: string): string {
   for (const entry of KNOWN_RUNTIME_REPLACEMENTS) {
     localized = localized.replace(entry.pattern, lang === "ru" ? entry.ru : entry.replacement);
   }
+  if (lang === "ru") {
+    localized = localized
+      .replace(/Patched chapter (\d+)\./g, "Внесены изменения в главу $1.")
+      .replace(/Reviewed chapter (\d+); (\d+) observation\(s\)\./g, "Проверена глава $1; замечаний: $2.")
+      .replace(/Completed (\d+) chapter\(s\) for "[^"]+"\./g, "Написано глав: $1.")
+      .replace(/CHAPTER_PATCH_LIMIT_REACHED:/g, "Достигнут лимит автоматических правок:");
+  }
   return localized;
 }

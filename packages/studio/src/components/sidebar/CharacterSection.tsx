@@ -25,7 +25,7 @@ function RoleEntry({ role }: { readonly role: RoleRef }) {
         {role.name}
       </span>
       <span className={`text-[12px] px-1.5 py-0.5 rounded-full shrink-0 ${badge.color}`}>
-        {tr(badge.zh, badge.en)}
+        {tr(badge.zh, badge.en, role.tier === "major" ? "Главный" : "Второстепенный")}
       </span>
     </button>
   );
@@ -69,7 +69,7 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
   if (roles.length === 0) return null;
 
   return (
-    <SidebarCard title={tr("角色", "Characters")}>
+    <SidebarCard title={tr("角色", "Characters", "Персонажи")}>
       <div className="space-y-1.5">
         {roles.map((role) => <RoleEntry key={role.path} role={role} />)}
       </div>

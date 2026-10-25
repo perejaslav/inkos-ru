@@ -3,7 +3,7 @@ import { useApi } from "../hooks/use-api";
 import { useNewSSEMessages, type SSEMessage } from "../hooks/use-sse";
 import { applyBookCollectionEvent, shouldRefetchBookCollections, shouldRefetchDaemonStatus } from "../hooks/use-book-activity";
 import type { TFunction } from "../hooks/use-i18n";
-import { tr } from "../lib/app-language";
+import { getAppLanguage, tr } from "../lib/app-language";
 import { setProjectChatSessionId } from "../pages/chat-page-state";
 import { useChatStore } from "../store/chat";
 import type { ChatRequestedIntent } from "../store/chat/types";
@@ -310,7 +310,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
               {t("nav.createSection")}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-1">
+          <div className={getAppLanguage() === "ru" ? "grid grid-cols-1 gap-0.5" : "grid grid-cols-2 gap-1"}>
             <CreateItem icon={<BookPlus size={16} />} label={t("nav.createNovel")} active={activePage === "book-create"} onClick={handleOpenBookCreate} />
             <CreateItem icon={<ScrollText size={16} />} label={t("nav.createShort")} onClick={() => launchProjectMode("short")} />
             <CreateItem icon={<Clapperboard size={16} />} label={t("nav.createScript")} onClick={() => launchProjectMode("script")} />
@@ -792,7 +792,7 @@ function CreateItem({ icon, label, active, onClick }: {
       }`}
     >
       <span className={`shrink-0 ${active ? "text-primary" : ""}`}>{icon}</span>
-      <span className="truncate">{label}</span>
+      <span className={getAppLanguage() === "ru" ? "whitespace-normal break-words" : "truncate"}>{label}</span>
     </button>
   );
 }

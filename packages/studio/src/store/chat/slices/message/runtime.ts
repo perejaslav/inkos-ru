@@ -53,10 +53,17 @@ export function extractErrorMessage(error: string | { code?: string; message?: s
   return localizeKnownRuntimeMessage(error.message ?? "Unknown error");
 }
 
+const RU_TOOL_LABELS: Record<string, string> = {
+  create_book: "Создание романа", create_work: "Создание произведения",
+  write_chapters: "Написание глав", review_chapter: "Проверка главы",
+  revise_chapter: "Редактирование главы", patch_chapter_text: "Точечная правка главы",
+  replace_chapter_text: "Замена главы", revise_foundation: "Изменение основы романа",
+  export_book: "Экспорт книги", export_work: "Экспорт произведения",
+};
 export function resolveToolLabel(tool: string, _agent?: string): string {
   tool = actionToolName(tool);
   const label = TOOL_LABELS[tool];
-  return label ? tr(label[0], label[1]) : tool;
+  return label ? tr(label[0], label[1], RU_TOOL_LABELS[tool]) : (RU_TOOL_LABELS[tool] ? tr(tool,tool,RU_TOOL_LABELS[tool]) : tool);
 }
 
 function actionToolName(tool: string): string {
@@ -67,13 +74,13 @@ function normalizeToolExecution(execution: ToolExecution): ToolExecution {
   const tool = actionToolName(execution.tool);
   const displayText = (execution.details as { displayText?: unknown } | undefined)?.displayText;
   return { ...execution, tool,
-    label: tool !== execution.tool || execution.label === tool ? resolveToolLabel(tool, execution.agent) : execution.label,
+    label: TOOL_LABELS[tool] || RU_TOOL_LABELS[tool] ? resolveToolLabel(tool, execution.agent) : execution.label,
     ...(typeof displayText === "string" ? { result: displayText }
       : typeof execution.result === "string" ? { result: toolResultDisplayText(execution.result) } : {}) };
 }
 
 export function summarizeResult(result: unknown): string {
-  return summarizeToolResult(result);
+  return localizeKnownRuntimeMessage(summarizeToolResult(result));
 }
 
 export function extractToolDetails(result: unknown): unknown {

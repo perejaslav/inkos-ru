@@ -12,6 +12,7 @@ let current: AppLanguage = "zh";
 
 export function setAppLanguage(lang: AppLanguage): void {
   current = lang;
+  if (typeof document !== "undefined") document.documentElement.lang = lang;
 }
 
 export function getAppLanguage(): AppLanguage {

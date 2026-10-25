@@ -33,7 +33,7 @@ export function FoundationSection({ bookId }: FoundationSectionProps) {
   if (available.length === 0) return null;
 
   return (
-    <SidebarCard title={tr("核心文件", "Core Files")}>
+    <SidebarCard title={tr("核心文件", "Core Files", "Основные файлы")}>
       <ul className="space-y-1">
         {available.map((item) => (
           <li key={item.name}>

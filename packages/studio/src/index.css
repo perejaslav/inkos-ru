@@ -338,3 +338,29 @@ h3 { font-size: 1.25rem; }
 [data-streamdown="table-wrapper"] > .flex.items-center.justify-end {
   display: none;
 }
+
+/* Russian copy must not use CJK/Latin-only literary glyph fallback or
+   decorative tracking intended for short Chinese headings. */
+html:lang(ru) {
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans: 'Segoe UI', Arial, sans-serif;
+}
+html:lang(ru) h1,
+html:lang(ru) h2,
+html:lang(ru) h3,
+html:lang(ru) h4,
+html:lang(ru) .font-serif {
+  letter-spacing: normal;
+}
+html:lang(ru) .tracking-widest,
+html:lang(ru) .tracking-wider,
+html:lang(ru) [class*="tracking-["] {
+  letter-spacing: normal;
+}
+/* Chat messages and sidebar entries explicitly use Chinese Song fonts.
+   Override those author classes only for the Russian UI. */
+html:lang(ru) [class*="SimSun"] {
+  font-family: 'Segoe UI', Arial, sans-serif !important;
+  letter-spacing: normal;
+  font-variant-east-asian: normal;
+}
