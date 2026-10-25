@@ -6405,8 +6405,8 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       const config = await loadCurrentProjectConfig();
       const response = await withTimeout(chatCompletion(createLLMClient(config.llm), config.llm.model, [{
         role: "user",
-        content: `Подготовь краткий отчёт на русском, максимум 350 слов. Используй ТОЛЬКО данные ниже. Не выдумывай продажи, выручку, просмотры, спрос, динамику или ссылки. Количество опубликованных книг — предложение, а позиция в списке — не продажи. Структура: факты, ограничения, гипотезы (отдельно от фактов), идеи авторам. Приведи 2–3 URL только из данных. Дата снимка: ${current.timestamp}; предыдущий: ${previous?.timestamp ?? "отсутствует"}. Без расчёта не утверждай динамику. Данные: ${JSON.stringify(data)}`,
-      }], { maxTokens: 3000, retry: false }), 90_000, "Russian market analysis");
+        content: `Составь на русском отчёт НЕ БОЛЕЕ 180 слов. Только проверяемые факты из JSON, ограничения, отдельно гипотезы и идеи авторам. Не выдумывай продажи, выручку, просмотры, спрос, динамику и ссылки. Количество книг — предложение; позиции — не продажи. Укажи 1–2 URL из JSON. Не пересказывай все записи. Дата: ${current.timestamp}. Данные: ${JSON.stringify(data)}`,
+      }], { maxTokens: 6000, retry: false }), 90_000, "Russian market analysis");
       const urls = new Set<string>();
       for (const source of data) for (const item of source.items) {
         if (item && typeof item.url === "string") urls.add(item.url);
