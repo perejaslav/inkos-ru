@@ -20,3 +20,22 @@ test("Russian market radar reports an AI failure", async ({ page }) => {
   await page.getByRole("button", { name: "Подготовить аналитический отчёт ИИ" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Провайдер недоступен" })).toBeVisible();
 });
+
+test("Russian market radar handles an empty history", async ({ page }) => {
+  await page.route("**/api/v1/radar/ru/history", route => route.fulfill({ json: { items: [] } }));
+  await page.goto("/#/radar");
+  await expect(page.getByText("Сохранённых снимков пока нет", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Подготовить аналитический отчёт ИИ" })).toBeDisabled();
+});
+
+test("Russian market radar distinguishes a failed source from successful sources", async ({ page }) => {
+  await page.route("**/api/v1/radar/ru/history", route => route.fulfill({ json: { items: [] } }));
+  await page.route("**/api/v1/radar/ru/litmarket/genres", route => route.fulfill({ json: { items: [{ genre: "Фэнтези", booksCount: 50, collectedAt: "2026-10-25T12:00:00Z", url: "https://litmarket.ru/books/genres/fantasy" }] } }));
+  await page.route("**/api/v1/radar/ru/litnet/popular", route => route.fulfill({ status: 502, json: { error: "Источник временно недоступен" } }));
+  await page.route("**/api/v1/radar/ru/author-today/monthly", route => route.fulfill({ json: { items: [] } }));
+  await page.goto("/#/radar");
+  await page.getByRole("button", { name: "Собрать данные российского рынка" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Литмаркет: данные получены" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Литнет: недоступен" })).toBeVisible();
+  await expect(page.getByText("50", { exact: true })).toBeVisible();
+});

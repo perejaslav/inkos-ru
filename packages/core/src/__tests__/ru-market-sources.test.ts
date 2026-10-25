@@ -33,4 +33,16 @@ describe("Russian market sources", () => {
     const mock = vi.fn().mockResolvedValue({ ok: true, text: async () => "<html></html>" });
     await expect(fetchLitmarketGenres(mock as unknown as typeof fetch)).rejects.toThrow("данные о жанрах не найдены");
   });
+  it("reports HTTP failures for every source", async () => {
+    const mock = vi.fn().mockResolvedValue({ ok: false, status: 503 });
+    await expect(fetchLitmarketGenres(mock as unknown as typeof fetch)).rejects.toThrow("HTTP 503");
+    await expect(fetchLitnetPopular(mock as unknown as typeof fetch)).rejects.toThrow("HTTP 503");
+    await expect(fetchAuthorTodayMonthly(mock as unknown as typeof fetch)).rejects.toThrow("HTTP 503");
+  });
+  it("propagates network timeouts rather than returning invented data", async () => {
+    const mock = vi.fn().mockRejectedValue(new DOMException("timeout", "TimeoutError"));
+    await expect(fetchLitmarketGenres(mock as unknown as typeof fetch)).rejects.toThrow("timeout");
+    await expect(fetchLitnetPopular(mock as unknown as typeof fetch)).rejects.toThrow("timeout");
+    await expect(fetchAuthorTodayMonthly(mock as unknown as typeof fetch)).rejects.toThrow("timeout");
+  });
 });

@@ -4,6 +4,7 @@ import type { TFunction } from "../hooks/use-i18n";
 import { useColors } from "../hooks/use-colors";
 import { fetchJson } from "../hooks/use-api";
 import { TrendingUp, Loader2, Target, Clock } from "lucide-react";
+import { compareRussianMarketSnapshots } from "../../../core/src/agents/ru-market-trends";
 
 interface Recommendation {
   readonly platform: string;
@@ -33,30 +34,6 @@ interface GenreSupply {
 }
 interface RankedBook { readonly title: string; readonly author: string; readonly rank: number; readonly url: string; readonly collectedAt: string }
 interface RuSnapshot { readonly timestamp: string; readonly sources: ReadonlyArray<{ readonly source: string; readonly status: string; readonly items: ReadonlyArray<unknown>; readonly error: string | null }> }
-interface GenreDelta { readonly genre: string; readonly previous: number; readonly current: number; readonly delta: number; readonly percent: number | null; readonly url: string }
-function genreChanges(before: RuSnapshot, after: RuSnapshot): GenreDelta[] {
-  const genres = (snapshot: RuSnapshot): Map<string, { count: number; url: string }> => {
-    const entries = snapshot.sources.find(source => source.source === "litmarket" && source.status === "ok")?.items ?? [];
-    const map = new Map<string, { count: number; url: string }>();
-    for (const item of entries) {
-      if (!item || typeof item !== "object") continue;
-      const entry = item as { genre?: unknown; booksCount?: unknown; metric?: unknown; url?: unknown };
-      if (typeof entry.genre === "string" && entry.metric === "published_books" && typeof entry.booksCount === "number" &&
-        Number.isSafeInteger(entry.booksCount) && entry.booksCount >= 0 && typeof entry.url === "string") {
-        map.set(entry.genre, { count: entry.booksCount, url: entry.url });
-      }
-    }
-    return map;
-  };
-  const previous = genres(before);
-  return [...genres(after)].flatMap(([genre, current]) => {
-    const old = previous.get(genre);
-    if (!old) return [];
-    const delta = current.count - old.count;
-    return [{ genre, previous: old.count, current: current.count, delta,
-      percent: old.count === 0 ? null : Math.round(delta / old.count * 10000) / 100, url: current.url }];
-  }).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
-}
 
 interface Nav { toDashboard: () => void }
 
@@ -80,9 +57,11 @@ export function RadarView({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFunct
   const [aiModel, setAiModel] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const analyzeRussianMarket = async () => {
     setAiLoading(true);
     setAiError("");
+    setAiReport("");
     try {
       const data = await fetchJson<{ report: string; model: string }>("/radar/ru/analyze", { method: "POST", signal: AbortSignal.timeout(100000) });
       setAiReport(data.report);
@@ -91,12 +70,14 @@ export function RadarView({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFunct
     finally { setAiLoading(false); }
   };
   const loadSnapshots = async () => {
-    try { setSnapshots((await fetchJson<{ items: RuSnapshot[] }>("/radar/ru/history")).items); }
+    try { setSnapshots((await fetchJson<{ items: RuSnapshot[] }>("/radar/ru/history")).items); setSnapshotError(""); }
     catch (e) { setSnapshotError(e instanceof Error ? e.message : String(e)); }
+    finally { setHistoryLoaded(true); }
   };
   const saveSnapshot = async () => {
     setSavingSnapshot(true);
     setSnapshotError("");
+    setAiReport("");
     try {
       await fetchJson<RuSnapshot>("/radar/ru/snapshot", { method: "POST", signal: AbortSignal.timeout(30000) });
       await loadSnapshots();
@@ -106,6 +87,9 @@ export function RadarView({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFunct
   const loadCombined = async () => {
     setCombinedLoading(true);
     setCombinedStatus("");
+    setRuGenres([]);
+    setRuBooks([]);
+    setAuthorBooks([]);
     const responses = await Promise.allSettled([
       fetchJson<{ items: GenreSupply[] }>("/radar/ru/litmarket/genres", { signal: AbortSignal.timeout(20000) }),
       fetchJson<{ items: RankedBook[] }>("/radar/ru/litnet/popular", { signal: AbortSignal.timeout(20000) }),
@@ -225,12 +209,13 @@ export function RadarView({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFunct
         <button onClick={saveSnapshot} disabled={savingSnapshot} className={`rounded-lg px-4 py-2 text-sm ${c.btnSecondary} disabled:opacity-40`}>
           {savingSnapshot ? "Сохранение снимка..." : "Собрать и сохранить снимок"}
         </button>
-        <button onClick={analyzeRussianMarket} disabled={aiLoading || snapshots.length === 0} className={`rounded-lg px-4 py-2 text-sm ${c.btnSecondary} disabled:opacity-40`}>
+        <button onClick={analyzeRussianMarket} disabled={aiLoading || savingSnapshot || snapshots.length === 0} title={snapshots.length === 0 ? "Сначала соберите и сохраните снимок" : undefined} className={`rounded-lg px-4 py-2 text-sm ${c.btnSecondary} disabled:opacity-40`}>
           {aiLoading ? "Анализ ИИ..." : "Подготовить аналитический отчёт ИИ"}
         </button>
         {aiError && <p role="alert" className="text-sm text-destructive">{aiError}</p>}
         {aiReport && <div className="space-y-2"><h3 className="font-medium">Отчёт ИИ ({aiModel})</h3><p className="whitespace-pre-wrap text-sm leading-relaxed">{aiReport}</p></div>}
         {snapshotError && <p role="alert" className="text-sm text-destructive">{snapshotError}</p>}
+        {historyLoaded && snapshots.length === 0 && !snapshotError && <p className="text-sm text-muted-foreground">Сохранённых снимков пока нет. Нажмите «Собрать и сохранить снимок», чтобы получить первый отчёт.</p>}
         {snapshots.length > 0 && <div className="text-sm space-y-1">
           <h3 className="font-medium">История снимков (последние {snapshots.length})</h3>
           {snapshots.slice(0, 5).map((snapshot) => <p key={snapshot.timestamp} className="text-muted-foreground">
@@ -240,9 +225,9 @@ export function RadarView({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFunct
         {snapshots.length >= 2 && <div className="text-sm space-y-2">
           <h3 className="font-medium">Изменения предложения жанров между двумя последними снимками</h3>
           <p className="text-xs text-muted-foreground">Сравнивается количество произведений Литмаркета, а не продажи или спрос. Разница может отражать изменения каталога.</p>
-          {genreChanges(snapshots[1], snapshots[0]).length === 0
+          {compareRussianMarketSnapshots(snapshots[1], snapshots[0]).length === 0
             ? <p className="text-muted-foreground">Сопоставимых данных нет.</p>
-            : genreChanges(snapshots[1], snapshots[0]).slice(0, 10).map(change => <div key={change.genre} className="flex justify-between gap-3">
+            : compareRussianMarketSnapshots(snapshots[1], snapshots[0]).slice(0, 10).map(change => <div key={change.genre} className="flex justify-between gap-3">
               <a href={change.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{change.genre}</a>
               <span className="tabular-nums">{change.previous.toLocaleString("ru-RU")} → {change.current.toLocaleString("ru-RU")} ({change.delta > 0 ? "+" : ""}{change.delta}; {change.percent === null ? "н/д" : `${change.percent}%`})</span>
             </div>)}

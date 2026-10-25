@@ -18,6 +18,7 @@ import {
   fetchLitmarketGenres,
   fetchLitnetPopular,
   fetchAuthorTodayMonthly,
+  validateRussianMarketReport,
   createLLMClient,
   createLogger,
   computeAnalytics,
@@ -6390,6 +6391,9 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       const snapshots = await Promise.all(files.slice(0, 2).map(async (name) => JSON.parse(await readFile(join(directory, name), "utf-8"))));
       const current = snapshots[0] as { timestamp: string; sources: Array<{ source: string; status: string; items: unknown[] }> };
       const previous = snapshots[1] as typeof current | undefined;
+      if (!Array.isArray(current.sources) || !current.sources.some((source) => source.status === "ok" && Array.isArray(source.items) && source.items.length > 0)) {
+        return c.json({ error: "В снимке нет данных для аналитического отчёта" }, 422);
+      }
       const data = current.sources.map((source) => ({ source: source.source, status: source.status,
         items: source.status === "ok" ? source.items.slice(0, source.source === "litmarket" ? 20 : 8).map((item) => {
           if (!item || typeof item !== "object") return null;
@@ -6403,7 +6407,12 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
         role: "user",
         content: `Подготовь краткий отчёт на русском, максимум 350 слов. Используй ТОЛЬКО данные ниже. Не выдумывай продажи, выручку, просмотры, спрос, динамику или ссылки. Количество опубликованных книг — предложение, а позиция в списке — не продажи. Структура: факты, ограничения, гипотезы (отдельно от фактов), идеи авторам. Приведи 2–3 URL только из данных. Дата снимка: ${current.timestamp}; предыдущий: ${previous?.timestamp ?? "отсутствует"}. Без расчёта не утверждай динамику. Данные: ${JSON.stringify(data)}`,
       }], { maxTokens: 3000, retry: false }), 90_000, "Russian market analysis");
-      return c.json({ report: response.content, model: config.llm.model, timestamp: current.timestamp });
+      const urls = new Set<string>();
+      for (const source of data) for (const item of source.items) {
+        if (item && typeof item.url === "string") urls.add(item.url);
+      }
+      const report = validateRussianMarketReport(response.content, urls);
+      return c.json({ report, model: config.llm.model, timestamp: current.timestamp });
     } catch (error) {
       return c.json({ error: error instanceof Error ? error.message : String(error) }, 502);
     }
